@@ -1,3 +1,14 @@
+/*
+ * TODO:
+ * - Modifiers
+ * - Color Code Table
+ * - Data Add cleanup
+ * - Paired Boards (as modifier?)
+ * - Tests
+ * - Duplicate checks
+ * - Auto sorting of high to low cards
+ */
+
 use std::{
     env,
     fs::{self, DirEntry},
@@ -8,6 +19,7 @@ use std::{
 use prettytable::{row, Table};
 
 mod board_utils;
+mod files;
 
 type Betsize = String;
 type Positions = (String, String);
@@ -33,7 +45,7 @@ enum Category {
     Low,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 enum Modifier {
     Rainbow,
     Twotone,
@@ -60,7 +72,7 @@ fn main() {
         actions,
     } = read_cmd_args();
 
-    let datas = build_datas(&positions, &betsizes, &actions, &categories);
+    let datas = build_datas(&positions, &betsizes, &actions, &categories, &modifiers);
 
     print_table(&datas);
 }
@@ -156,8 +168,9 @@ fn build_datas(
     betsizes: &Vec<Betsize>,
     actions: &Vec<String>,
     categories: &Vec<Category>,
+    modifiers: &Vec<Modifier>,
 ) -> Vec<Data> {
-    let pos_dir = get_valid_child_dirs(PathBuf::from(DATA_DIR))
+    let pos_dir = files::get_valid_child_dirs(PathBuf::from(DATA_DIR))
         .find(|dir| {
             let name = get_filename(dir).to_lowercase();
             name.contains(&positions.0) && name.contains(&positions.1)
@@ -170,10 +183,14 @@ fn build_datas(
     let collect_mid = categories.contains(&Category::Middling);
     let collect_low = categories.contains(&Category::Low);
 
+    let collect_rb = modifiers.contains(&Modifier::Rainbow);
+    let collect_tt = modifiers.contains(&Modifier::Twotone);
+    let collect_mono = modifiers.contains(&Modifier::Montone);
+
     let datas: Vec<Data> = betsizes
         .iter()
         .map(|size| {
-            let size_dir = get_valid_child_dirs(pos_dir.path())
+            let size_dir = files::get_valid_child_dirs(pos_dir.path())
                 .find(|size_dir| get_filename(&size_dir) == *size)
                 .expect("Could not find size directory");
 
@@ -187,12 +204,23 @@ fn build_datas(
                 .lines()
                 .skip(1)
                 .map(|line| build_data_from_line(line, size))
-                .filter(|data| {
-                    collect_1bw && board_utils::is_1bw(&data.board)
-                        || collect_2bw && board_utils::is_2bw(&data.board)
-                        || collect_3bw && board_utils::is_3bw(&data.board)
-                        || collect_mid && board_utils::is_middling(&data.board)
-                        || collect_low && board_utils::is_low(&data.board)
+                .filter(|data| match categories.len() {
+                    0 => true,
+                    _ => {
+                        collect_1bw && board_utils::is_1bw(&data.board)
+                            || collect_2bw && board_utils::is_2bw(&data.board)
+                            || collect_3bw && board_utils::is_3bw(&data.board)
+                            || collect_mid && board_utils::is_middling(&data.board)
+                            || collect_low && board_utils::is_low(&data.board)
+                    }
+                })
+                .filter(|data| match modifiers.len() {
+                    0 => true,
+                    _ => {
+                        collect_rb && board_utils::is_rainbow(&data.board)
+                            || collect_tt && board_utils::is_twotone(&data.board)
+                            || collect_mono && board_utils::is_monotone(&data.board)
+                    }
                 });
 
             let count = datas.clone().count() as f32;
@@ -246,7 +274,7 @@ fn get_filename(entry: &DirEntry) -> String {
 }
 
 fn find_action_file(size_dir: &DirEntry, line: &Vec<String>) -> Option<DirEntry> {
-    get_valid_child_files(size_dir.path()).find(|file| match file.path().file_stem() {
+    files::get_valid_child_files(size_dir.path()).find(|file| match file.path().file_stem() {
         Some(name) => {
             let split_pattern = '_';
             let name = name.to_string_lossy();
@@ -274,22 +302,4 @@ fn build_data_from_line(line: &str, size: &str) -> Data {
         bet_freq: split[3].parse().expect("Bet freq. needs to be a number"),
         check_freq: split[4].parse().expect("Check freq. needs to be a number"),
     }
-}
-
-fn get_valid_child_dirs(path: PathBuf) -> impl Iterator<Item = DirEntry> {
-    fs::read_dir(&path)
-        .expect(&format!("Error reading directory: {:#?}", path))
-        .filter_map(Result::ok)
-        .filter(|entry| {
-            entry.path().is_dir() && !entry.file_name().to_string_lossy().starts_with(".")
-        })
-}
-
-fn get_valid_child_files(path: PathBuf) -> impl Iterator<Item = DirEntry> {
-    fs::read_dir(&path)
-        .expect(&format!("Error reading directory: {:#?}", path))
-        .filter_map(Result::ok)
-        .filter(|entry| {
-            entry.path().is_file() && !entry.file_name().to_string_lossy().starts_with(".")
-        })
 }
