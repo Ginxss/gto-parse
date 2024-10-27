@@ -37,7 +37,7 @@ struct Data {
 }
 
 #[derive(Debug, PartialEq)]
-enum Category {
+enum BoardCategory {
     SingleBW,
     DoubleBW,
     TripleBW,
@@ -56,7 +56,7 @@ enum Modifier {
 }
 
 struct Args {
-    categories: Vec<Category>,
+    categories: Vec<BoardCategory>,
     modifiers: Vec<Modifier>,
     betsizes: Vec<Betsize>,
     positions: Positions,
@@ -87,7 +87,7 @@ fn read_cmd_args() -> Args {
         ActionSequence,
     }
 
-    let mut categories: Vec<Category> = Vec::new();
+    let mut categories: Vec<BoardCategory> = Vec::new();
     let mut modifiers: Vec<Modifier> = Vec::new();
     let mut betsizes: Vec<Betsize> = Vec::new();
     let mut positions: Vec<String> = Vec::new();
@@ -121,11 +121,11 @@ fn read_cmd_args() -> Args {
 
             token => match curr_parse_mode {
                 ParseMode::Categories => match token {
-                    "1bw" => categories.push(Category::SingleBW),
-                    "2bw" => categories.push(Category::DoubleBW),
-                    "3bw" => categories.push(Category::TripleBW),
-                    "mid" | "middling" => categories.push(Category::Middling),
-                    "low" => categories.push(Category::Low),
+                    "1bw" => categories.push(BoardCategory::SingleBW),
+                    "2bw" => categories.push(BoardCategory::DoubleBW),
+                    "3bw" => categories.push(BoardCategory::TripleBW),
+                    "mid" | "middling" => categories.push(BoardCategory::Middling),
+                    "low" => categories.push(BoardCategory::Low),
                     _ => panic!(),
                 },
                 ParseMode::Modifiers => match token {
@@ -167,7 +167,7 @@ fn build_datas(
     positions: &Positions,
     betsizes: &Vec<Betsize>,
     actions: &Vec<String>,
-    categories: &Vec<Category>,
+    categories: &Vec<BoardCategory>,
     modifiers: &Vec<Modifier>,
 ) -> Vec<Data> {
     let pos_dir = files::get_valid_child_dirs(PathBuf::from(DATA_DIR))
@@ -177,11 +177,11 @@ fn build_datas(
         })
         .expect("Could not find position directory");
 
-    let collect_1bw = categories.contains(&Category::SingleBW);
-    let collect_2bw = categories.contains(&Category::DoubleBW);
-    let collect_3bw = categories.contains(&Category::TripleBW);
-    let collect_mid = categories.contains(&Category::Middling);
-    let collect_low = categories.contains(&Category::Low);
+    let collect_1bw = categories.contains(&BoardCategory::SingleBW);
+    let collect_2bw = categories.contains(&BoardCategory::DoubleBW);
+    let collect_3bw = categories.contains(&BoardCategory::TripleBW);
+    let collect_mid = categories.contains(&BoardCategory::Middling);
+    let collect_low = categories.contains(&BoardCategory::Low);
 
     let collect_rb = modifiers.contains(&Modifier::Rainbow);
     let collect_tt = modifiers.contains(&Modifier::Twotone);
