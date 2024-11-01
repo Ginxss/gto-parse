@@ -4,7 +4,7 @@ use std::collections::HashMap;
 /*
  * Terminology:
  * Rank = card without suit (e.g. A)
- * Suit = suit modifier after card (s, c, d or h)
+ * Suit = suit modifier after rank (s, c, d or h)
  * Card = rank + suit (e.g. As)
  * Value = card rank as numerical value (A is 12, 2 is 0)
  * CardCategory = broadway, middling or low
@@ -23,6 +23,38 @@ fn get_category(rank: &char) -> CardCategory {
         '9' | '8' | '7' => CardCategory::Middling,
         'T' | 'J' | 'Q' | 'K' | 'A' => CardCategory::Broadway,
         _ => panic!("Invalid rank"),
+    }
+}
+
+fn is_valid_rank(rank: &char) -> bool {
+    match rank {
+        '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | 'T' | 'J' | 'Q' | 'K' | 'A' => true,
+        _ => false,
+    }
+}
+
+fn is_valid_suit(suit: &char) -> bool {
+    match suit {
+        's' | 'd' | 'h' | 'c' => true,
+        _ => false,
+    }
+}
+
+fn is_valid_flop(flop: &str) -> bool {
+    flop.len() == 6
+        && flop.char_indices().all(|(i, c)| {
+            if i % 2 == 0 {
+                is_valid_rank(&c)
+            } else {
+                is_valid_suit(&c)
+            }
+        })
+}
+
+fn is_wheel_rank(rank: &char) -> bool {
+    match rank {
+        'A' | '2' | '3' | '4' | '5' => true,
+        _ => false,
     }
 }
 
@@ -45,92 +77,134 @@ fn get_value(rank: &char) -> i8 {
     }
 }
 
-fn get_rank(board: &str, i: usize) -> char {
-    assert!(board.len() == 6);
+fn get_rank(flop: &str, i: usize) -> char {
+    assert!(is_valid_flop(flop));
     assert!((0..=2).contains(&i));
 
-    board.chars().nth(i * 2).unwrap()
+    flop.chars().nth(i * 2).unwrap()
 }
 
-fn get_suit(board: &str, i: usize) -> char {
-    assert!(board.len() == 6);
+fn get_suit(flop: &str, i: usize) -> char {
+    assert!(is_valid_flop(flop));
     assert!((0..=2).contains(&i));
 
-    board.chars().nth(i * 2 + 1).unwrap()
+    flop.chars().nth(i * 2 + 1).unwrap()
 }
 
-fn get_card(board: &str, i: usize) -> &str {
-    assert!(board.len() == 6);
+fn get_card(flop: &str, i: usize) -> &str {
+    assert!(is_valid_flop(flop));
     assert!((0..=2).contains(&i));
 
-    &board[i * 2..(i + 1) * 2]
+    &flop[i * 2..(i + 1) * 2]
 }
 
-// TODO: Performance
-fn num_card_category(board: &str, filter_category: CardCategory) -> usize {
-    (0..=2)
-        .map(|i| get_rank(board, i))
+fn get_ranks(flop: &str) -> Vec<char> {
+    assert!(is_valid_flop(flop));
+
+    let ranks: Vec<char> = flop
+        .char_indices()
+        .filter_map(|(i, c)| (i % 2 == 0).then(|| c))
+        .collect();
+
+    assert!(ranks.len() == 3);
+
+    ranks
+}
+
+fn get_suits(flop: &str) -> Vec<char> {
+    assert!(is_valid_flop(flop));
+
+    let suits: Vec<char> = flop
+        .char_indices()
+        .filter_map(|(i, c)| (i % 2 != 0).then(|| c))
+        .collect();
+
+    assert!(suits.len() == 3);
+
+    suits
+}
+
+fn get_cards(flop: &str) -> Vec<&str> {
+    assert!(is_valid_flop(flop));
+
+    let cards = vec![&flop[..2], &flop[2..4], &flop[4..]];
+
+    assert!(cards.len() == 3);
+    assert!(cards[0].len() == 2);
+    assert!(cards[1].len() == 2);
+    assert!(cards[2].len() == 2);
+
+    cards
+}
+
+fn num_card_category(flop: &str, filter_category: CardCategory) -> usize {
+    get_ranks(flop)
+        .iter()
         .map(|rank| get_category(&rank))
         .filter(|category| *category == filter_category)
         .count()
 }
 
-pub fn is_1bw(board: &str) -> bool {
-    num_card_category(board, CardCategory::Broadway) == 1
+pub fn is_1bw(flop: &str) -> bool {
+    num_card_category(flop, CardCategory::Broadway) == 1
 }
 
-pub fn is_2bw(board: &str) -> bool {
-    num_card_category(board, CardCategory::Broadway) == 2
+pub fn is_2bw(flop: &str) -> bool {
+    num_card_category(flop, CardCategory::Broadway) == 2
 }
 
-pub fn is_3bw(board: &str) -> bool {
-    num_card_category(board, CardCategory::Broadway) == 3
+pub fn is_3bw(flop: &str) -> bool {
+    num_card_category(flop, CardCategory::Broadway) == 3
 }
 
-pub fn is_middling(board: &str) -> bool {
-    num_card_category(board, CardCategory::Broadway) == 0
-        && num_card_category(board, CardCategory::Middling) > 0
+pub fn is_middling(flop: &str) -> bool {
+    num_card_category(flop, CardCategory::Broadway) == 0
+        && num_card_category(flop, CardCategory::Middling) > 0
 }
 
-pub fn is_low(board: &str) -> bool {
-    num_card_category(board, CardCategory::Broadway) == 0
-        && num_card_category(board, CardCategory::Middling) == 0
+pub fn is_low(flop: &str) -> bool {
+    num_card_category(flop, CardCategory::Broadway) == 0
+        && num_card_category(flop, CardCategory::Middling) == 0
 }
 
-fn get_suit_count(board: &str) -> HashMap<char, i32> {
-    (0..=2)
-        .map(|i| get_suit(board, i))
+fn get_max_suit_count(flop: &str) -> i32 {
+    *get_suits(flop)
+        .iter()
         .fold(HashMap::new(), |mut acc, suit| {
             *acc.entry(suit).or_insert(0) += 1;
             acc
         })
-}
-
-pub fn is_rainbow(board: &str) -> bool {
-    *get_suit_count(board)
         .values()
         .max()
         .expect("Expected max to be there")
-        == 1
 }
 
-pub fn is_twotone(board: &str) -> bool {
-    *get_suit_count(board)
-        .values()
-        .max()
-        .expect("Expected max to be there")
-        == 2
+pub fn is_rainbow(flop: &str) -> bool {
+    get_max_suit_count(flop) == 1
 }
 
-pub fn is_monotone(board: &str) -> bool {
-    *get_suit_count(board)
-        .values()
-        .max()
-        .expect("Expected max to be there")
-        == 3
+pub fn is_twotone(flop: &str) -> bool {
+    get_max_suit_count(flop) == 2
 }
 
-// TODO: Connectedness
+pub fn is_monotone(flop: &str) -> bool {
+    get_max_suit_count(flop) == 3
+}
+
+pub fn is_straight_possible(flop: &str) -> bool {
+    assert!(is_valid_flop(flop));
+
+    let normal_straight_possible = get_ranks(flop)
+        .windows(2)
+        .map(|ranks| get_value(&ranks[0]) - get_value(&ranks[1]))
+        .map(|diff| diff.abs())
+        .sum::<i8>()
+        <= 4;
+
+    let wheel_straight_possible = get_ranks(flop).iter().all(|rank| is_wheel_rank(rank));
+
+    normal_straight_possible || wheel_straight_possible
+}
 
 #[cfg(test)]
 mod tests {
@@ -138,10 +212,10 @@ mod tests {
 
     #[test]
     fn test_get_rank() {
-        let board = "KsAc7c";
-        assert_eq!(get_rank(board, 0), 'K');
-        assert_eq!(get_rank(board, 1), 'A');
-        assert_eq!(get_rank(board, 2), '7');
+        let flop = "KsAc7c";
+        assert_eq!(get_rank(flop, 0), 'K');
+        assert_eq!(get_rank(flop, 1), 'A');
+        assert_eq!(get_rank(flop, 2), '7');
     }
 
     #[test]
@@ -164,10 +238,10 @@ mod tests {
 
     #[test]
     fn test_get_suit() {
-        let board = "KsAc7h";
-        assert_eq!(get_suit(board, 0), 's');
-        assert_eq!(get_suit(board, 1), 'c');
-        assert_eq!(get_suit(board, 2), 'h');
+        let flop = "KsAc7h";
+        assert_eq!(get_suit(flop, 0), 's');
+        assert_eq!(get_suit(flop, 1), 'c');
+        assert_eq!(get_suit(flop, 2), 'h');
     }
 
     #[test]
@@ -190,10 +264,10 @@ mod tests {
 
     #[test]
     fn test_get_card() {
-        let board = "KsAc7h";
-        assert_eq!(get_card(board, 0), "Ks");
-        assert_eq!(get_card(board, 1), "Ac");
-        assert_eq!(get_card(board, 2), "7h");
+        let flop = "KsAc7h";
+        assert_eq!(get_card(flop, 0), "Ks");
+        assert_eq!(get_card(flop, 1), "Ac");
+        assert_eq!(get_card(flop, 2), "7h");
     }
 
     #[test]
@@ -212,6 +286,39 @@ mod tests {
     #[should_panic]
     fn test_get_card_board_too_short() {
         get_card("KsAc", 1);
+    }
+
+    #[test]
+    fn test_get_ranks() {
+        assert_eq!(get_ranks("KsAc7h"), vec!['K', 'A', '7']);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_get_ranks_board_too_long() {
+        get_ranks("KsAc7h9");
+    }
+
+    #[test]
+    fn test_get_suits() {
+        assert_eq!(get_suits("KsAc7h"), vec!['s', 'c', 'h']);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_get_suits_board_too_long() {
+        get_suits("KsAc7h9");
+    }
+
+    #[test]
+    fn test_get_cards() {
+        assert_eq!(get_cards("KsAc7h"), vec!["Ks", "Ac", "7h"]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_get_cards_board_too_long() {
+        get_cards("KsAc7h9");
     }
 
     #[test]
@@ -256,20 +363,20 @@ mod tests {
 
     #[test]
     fn test_num_card_category() {
-        let board = "3h9cTh";
-        assert_eq!(num_card_category(board, CardCategory::Broadway), 1);
-        assert_eq!(num_card_category(board, CardCategory::Middling), 1);
-        assert_eq!(num_card_category(board, CardCategory::Low), 1);
+        let flop = "3h9cTh";
+        assert_eq!(num_card_category(flop, CardCategory::Broadway), 1);
+        assert_eq!(num_card_category(flop, CardCategory::Middling), 1);
+        assert_eq!(num_card_category(flop, CardCategory::Low), 1);
 
-        let board = "AsAc6h";
-        assert_eq!(num_card_category(board, CardCategory::Broadway), 2);
-        assert_eq!(num_card_category(board, CardCategory::Middling), 0);
-        assert_eq!(num_card_category(board, CardCategory::Low), 1);
+        let flop = "AsAc6h";
+        assert_eq!(num_card_category(flop, CardCategory::Broadway), 2);
+        assert_eq!(num_card_category(flop, CardCategory::Middling), 0);
+        assert_eq!(num_card_category(flop, CardCategory::Low), 1);
 
-        let board = "Qc9h7h";
-        assert_eq!(num_card_category(board, CardCategory::Broadway), 1);
-        assert_eq!(num_card_category(board, CardCategory::Middling), 2);
-        assert_eq!(num_card_category(board, CardCategory::Low), 0);
+        let flop = "Qc9h7h";
+        assert_eq!(num_card_category(flop, CardCategory::Broadway), 1);
+        assert_eq!(num_card_category(flop, CardCategory::Middling), 2);
+        assert_eq!(num_card_category(flop, CardCategory::Low), 0);
     }
 
     #[test]
@@ -313,12 +420,10 @@ mod tests {
     }
 
     #[test]
-    fn test_get_suit_count() {
-        let suit_count = get_suit_count("Qc9h7h");
-        assert_eq!(suit_count.get(&'c'), Some(&1));
-        assert_eq!(suit_count.get(&'h'), Some(&2));
-        assert_eq!(suit_count.get(&'s'), None);
-        assert_eq!(suit_count.get(&'d'), None);
+    fn test_get_max_suit_count() {
+        assert_eq!(get_max_suit_count("Qc9h7h"), 2);
+        assert_eq!(get_max_suit_count("Qc9s7h"), 1);
+        assert_eq!(get_max_suit_count("Qc9c7c"), 3);
     }
 
     #[test]
@@ -343,5 +448,15 @@ mod tests {
         assert!(is_monotone("5c3c2c"));
         assert!(!is_monotone("Ac2h3s"));
         assert!(!is_monotone("Tc8sKs"));
+    }
+
+    #[test]
+    fn test_is_straight_possible() {
+        assert!(is_straight_possible("Ts9c8h"));
+        assert!(is_straight_possible("Ts9c7h"));
+        assert!(is_straight_possible("Ts9c6h"));
+        assert!(!is_straight_possible("Ts9c5h"));
+        assert!(is_straight_possible("As2c3h"));
+        assert!(!is_straight_possible("Ks2c3h"));
     }
 }
