@@ -51,7 +51,7 @@ mod tests {
                 .all(|rank| is_valid_rank(rank))
         );
 
-        assert!(['a', 'ö', 't', 'R', 'L', '.']
+        assert!(['a', 'ö', 't', 'R', 'L', '.', 's', 'h', 'd', 'c']
             .iter()
             .all(|rank| !is_valid_rank(rank)));
     }
@@ -73,7 +73,7 @@ mod tests {
     fn test_is_valid_suit() {
         assert!(['s', 'd', 'h', 'c'].iter().all(|suit| is_valid_suit(suit)));
 
-        assert!(['a', 'ö', 't', 'R', 'L', '.']
+        assert!(['a', 'ö', 't', 'R', 'L', '.', 'A', 'T', '6', '2']
             .iter()
             .all(|rank| !is_valid_suit(rank)));
     }
