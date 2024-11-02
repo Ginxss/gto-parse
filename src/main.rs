@@ -18,7 +18,7 @@ use std::{
 
 use prettytable::{row, Table};
 
-mod board_utils;
+mod board;
 mod files;
 
 type Betsize = String;
@@ -207,19 +207,19 @@ fn build_datas(
                 .filter(|data| match categories.len() {
                     0 => true,
                     _ => {
-                        collect_1bw && board_utils::is_1bw(&data.board)
-                            || collect_2bw && board_utils::is_2bw(&data.board)
-                            || collect_3bw && board_utils::is_3bw(&data.board)
-                            || collect_mid && board_utils::is_middling(&data.board)
-                            || collect_low && board_utils::is_low(&data.board)
+                        collect_1bw && board::is_1bw(&data.board)
+                            || collect_2bw && board::is_2bw(&data.board)
+                            || collect_3bw && board::is_3bw(&data.board)
+                            || collect_mid && board::is_middling(&data.board)
+                            || collect_low && board::is_low(&data.board)
                     }
                 })
                 .filter(|data| match modifiers.len() {
                     0 => true,
                     _ => {
-                        collect_rb && board_utils::is_rainbow(&data.board)
-                            || collect_tt && board_utils::is_twotone(&data.board)
-                            || collect_mono && board_utils::is_monotone(&data.board)
+                        collect_rb && board::is_rainbow(&data.board)
+                            || collect_tt && board::is_twotone(&data.board)
+                            || collect_mono && board::is_monotone(&data.board)
                     }
                 });
 

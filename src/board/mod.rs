@@ -1,6 +1,8 @@
 use core::panic;
 use std::collections::HashMap;
 
+mod validators;
+
 /*
  * Terminology:
  * Rank = card without suit (e.g. A)
@@ -17,44 +19,85 @@ enum CardCategory {
     Low,
 }
 
+fn get_rank(flop: &str, i: usize) -> char {
+    assert!(validators::is_valid_flop(flop));
+    assert!((0..=2).contains(&i));
+
+    let rank = flop.chars().nth(i * 2).unwrap();
+
+    assert!(validators::is_valid_rank(&rank));
+
+    rank
+}
+
+fn get_suit(flop: &str, i: usize) -> char {
+    assert!(validators::is_valid_flop(flop));
+    assert!((0..=2).contains(&i));
+
+    let suit = flop.chars().nth(i * 2 + 1).unwrap();
+
+    assert!(validators::is_valid_suit(&suit));
+
+    suit
+}
+
+fn get_card(flop: &str, i: usize) -> &str {
+    assert!(validators::is_valid_flop(flop));
+    assert!((0..=2).contains(&i));
+
+    let card = &flop[i * 2..(i + 1) * 2];
+
+    assert!(validators::is_valid_card(card));
+
+    card
+}
+
+fn get_ranks(flop: &str) -> Vec<char> {
+    assert!(validators::is_valid_flop(flop));
+
+    let ranks: Vec<char> = flop
+        .char_indices()
+        .filter_map(|(i, c)| (i % 2 == 0).then(|| c))
+        .collect();
+
+    assert!(ranks.len() == 3);
+    assert!(ranks.iter().all(|rank| validators::is_valid_rank(rank)));
+
+    ranks
+}
+
+fn get_suits(flop: &str) -> Vec<char> {
+    assert!(validators::is_valid_flop(flop));
+
+    let suits: Vec<char> = flop
+        .char_indices()
+        .filter_map(|(i, c)| (i % 2 != 0).then(|| c))
+        .collect();
+
+    assert!(suits.len() == 3);
+
+    suits
+}
+
+fn get_cards(flop: &str) -> Vec<&str> {
+    assert!(validators::is_valid_flop(flop));
+
+    let cards = vec![&flop[..2], &flop[2..4], &flop[4..]];
+
+    assert!(cards.len() == 3);
+    assert!(cards[0].len() == 2);
+    assert!(cards[1].len() == 2);
+    assert!(cards[2].len() == 2);
+
+    cards
+}
+
 fn get_category(rank: &char) -> CardCategory {
     match rank {
         '2' | '3' | '4' | '5' | '6' => CardCategory::Low,
         '9' | '8' | '7' => CardCategory::Middling,
         'T' | 'J' | 'Q' | 'K' | 'A' => CardCategory::Broadway,
         _ => panic!("Invalid rank"),
-    }
-}
-
-fn is_valid_rank(rank: &char) -> bool {
-    match rank {
-        '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | 'T' | 'J' | 'Q' | 'K' | 'A' => true,
-        _ => false,
-    }
-}
-
-fn is_valid_suit(suit: &char) -> bool {
-    match suit {
-        's' | 'd' | 'h' | 'c' => true,
-        _ => false,
-    }
-}
-
-fn is_valid_flop(flop: &str) -> bool {
-    flop.len() == 6
-        && flop.char_indices().all(|(i, c)| {
-            if i % 2 == 0 {
-                is_valid_rank(&c)
-            } else {
-                is_valid_suit(&c)
-            }
-        })
-}
-
-fn is_wheel_rank(rank: &char) -> bool {
-    match rank {
-        'A' | '2' | '3' | '4' | '5' => true,
-        _ => false,
     }
 }
 
@@ -75,66 +118,6 @@ fn get_value(rank: &char) -> i8 {
         'A' => 12,
         _ => panic!("Invalid rank"),
     }
-}
-
-fn get_rank(flop: &str, i: usize) -> char {
-    assert!(is_valid_flop(flop));
-    assert!((0..=2).contains(&i));
-
-    flop.chars().nth(i * 2).unwrap()
-}
-
-fn get_suit(flop: &str, i: usize) -> char {
-    assert!(is_valid_flop(flop));
-    assert!((0..=2).contains(&i));
-
-    flop.chars().nth(i * 2 + 1).unwrap()
-}
-
-fn get_card(flop: &str, i: usize) -> &str {
-    assert!(is_valid_flop(flop));
-    assert!((0..=2).contains(&i));
-
-    &flop[i * 2..(i + 1) * 2]
-}
-
-fn get_ranks(flop: &str) -> Vec<char> {
-    assert!(is_valid_flop(flop));
-
-    let ranks: Vec<char> = flop
-        .char_indices()
-        .filter_map(|(i, c)| (i % 2 == 0).then(|| c))
-        .collect();
-
-    assert!(ranks.len() == 3);
-
-    ranks
-}
-
-fn get_suits(flop: &str) -> Vec<char> {
-    assert!(is_valid_flop(flop));
-
-    let suits: Vec<char> = flop
-        .char_indices()
-        .filter_map(|(i, c)| (i % 2 != 0).then(|| c))
-        .collect();
-
-    assert!(suits.len() == 3);
-
-    suits
-}
-
-fn get_cards(flop: &str) -> Vec<&str> {
-    assert!(is_valid_flop(flop));
-
-    let cards = vec![&flop[..2], &flop[2..4], &flop[4..]];
-
-    assert!(cards.len() == 3);
-    assert!(cards[0].len() == 2);
-    assert!(cards[1].len() == 2);
-    assert!(cards[2].len() == 2);
-
-    cards
 }
 
 fn num_card_category(flop: &str, filter_category: CardCategory) -> usize {
@@ -191,19 +174,47 @@ pub fn is_monotone(flop: &str) -> bool {
     get_max_suit_count(flop) == 3
 }
 
-pub fn is_straight_possible(flop: &str) -> bool {
-    assert!(is_valid_flop(flop));
+fn get_diffs(ranks: &Vec<char>) -> Vec<i8> {
+    assert!(ranks.len() == 3);
+    assert!(ranks.iter().all(|rank| validators::is_valid_rank(rank)));
 
-    let normal_straight_possible = get_ranks(flop)
+    let diffs: Vec<i8> = ranks
         .windows(2)
         .map(|ranks| get_value(&ranks[0]) - get_value(&ranks[1]))
         .map(|diff| diff.abs())
-        .sum::<i8>()
-        <= 4;
+        .collect();
 
-    let wheel_straight_possible = get_ranks(flop).iter().all(|rank| is_wheel_rank(rank));
+    assert!(diffs.len() == 2);
+
+    diffs
+}
+
+pub fn is_straight_possible(flop: &str) -> bool {
+    assert!(validators::is_valid_flop(flop));
+
+    let ranks = get_ranks(flop);
+
+    let normal_straight_possible = get_diffs(&ranks).iter().sum::<i8>() <= 4;
+
+    let wheel_straight_possible = ranks.iter().all(|rank| validators::is_wheel_rank(rank));
 
     normal_straight_possible || wheel_straight_possible
+}
+
+pub fn is_oesd_possible(flop: &str) -> bool {
+    assert!(validators::is_valid_flop(flop));
+
+    let ranks = get_ranks(flop);
+
+    let diffs = get_diffs(&ranks);
+
+    let no_straight_possible = diffs.iter().sum::<i8>() > 4;
+    let oesd_possible = no_straight_possible && diffs.iter().any(|diff| *diff == 2 || *diff == 3);
+
+    let a_draw = ranks.iter().any(|rank| *rank == 'A')
+        && num_card_category(flop, CardCategory::Broadway) == 2;
+
+    oesd_possible && !a_draw
 }
 
 #[cfg(test)]
