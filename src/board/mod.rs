@@ -1,8 +1,10 @@
-use core::panic;
-use std::collections::HashMap;
-
 mod accessors;
+mod rank_properties;
 mod validators;
+
+use accessors::{get_ranks, get_suits};
+use rank_properties::{get_category, get_value, RankCategory};
+use std::collections::HashMap;
 
 /*
  * Terminology:
@@ -10,46 +12,13 @@ mod validators;
  * Suit = suit modifier after rank (s, c, d or h)
  * Card = rank + suit (e.g. As)
  * Value = card rank as numerical value (A is 12, 2 is 0)
- * CardCategory = broadway, middling or low
+ * RankCategory = broadway, middling or low
  */
 
-#[derive(Debug, PartialEq)]
-enum CardCategory {
-    Broadway,
-    Middling,
-    Low,
-}
+/// Flop Category ///
 
-fn get_category(rank: &char) -> CardCategory {
-    match rank {
-        '2' | '3' | '4' | '5' | '6' => CardCategory::Low,
-        '9' | '8' | '7' => CardCategory::Middling,
-        'T' | 'J' | 'Q' | 'K' | 'A' => CardCategory::Broadway,
-        _ => panic!("Invalid rank"),
-    }
-}
-
-fn get_value(rank: &char) -> i8 {
-    match rank {
-        '2' => 0,
-        '3' => 1,
-        '4' => 2,
-        '5' => 3,
-        '6' => 4,
-        '7' => 5,
-        '8' => 6,
-        '9' => 7,
-        'T' => 8,
-        'J' => 9,
-        'Q' => 10,
-        'K' => 11,
-        'A' => 12,
-        _ => panic!("Invalid rank"),
-    }
-}
-
-fn num_card_category(flop: &str, filter_category: CardCategory) -> usize {
-    accessors::get_ranks(flop)
+fn num_card_category(flop: &str, filter_category: RankCategory) -> usize {
+    get_ranks(flop)
         .iter()
         .map(|rank| get_category(&rank))
         .filter(|category| *category == filter_category)
@@ -57,29 +26,31 @@ fn num_card_category(flop: &str, filter_category: CardCategory) -> usize {
 }
 
 pub fn is_1bw(flop: &str) -> bool {
-    num_card_category(flop, CardCategory::Broadway) == 1
+    num_card_category(flop, RankCategory::Broadway) == 1
 }
 
 pub fn is_2bw(flop: &str) -> bool {
-    num_card_category(flop, CardCategory::Broadway) == 2
+    num_card_category(flop, RankCategory::Broadway) == 2
 }
 
 pub fn is_3bw(flop: &str) -> bool {
-    num_card_category(flop, CardCategory::Broadway) == 3
+    num_card_category(flop, RankCategory::Broadway) == 3
 }
 
 pub fn is_middling(flop: &str) -> bool {
-    num_card_category(flop, CardCategory::Broadway) == 0
-        && num_card_category(flop, CardCategory::Middling) > 0
+    num_card_category(flop, RankCategory::Broadway) == 0
+        && num_card_category(flop, RankCategory::Middling) > 0
 }
 
 pub fn is_low(flop: &str) -> bool {
-    num_card_category(flop, CardCategory::Broadway) == 0
-        && num_card_category(flop, CardCategory::Middling) == 0
+    num_card_category(flop, RankCategory::Broadway) == 0
+        && num_card_category(flop, RankCategory::Middling) == 0
 }
 
+/// Suits ///
+
 fn get_max_suit_count(flop: &str) -> i32 {
-    *accessors::get_suits(flop)
+    *get_suits(flop)
         .iter()
         .fold(HashMap::new(), |mut acc, suit| {
             *acc.entry(suit).or_insert(0) += 1;
@@ -101,6 +72,8 @@ pub fn is_twotone(flop: &str) -> bool {
 pub fn is_monotone(flop: &str) -> bool {
     get_max_suit_count(flop) == 3
 }
+
+/// Connectedness ///
 
 fn get_diffs(ranks: &Vec<char>) -> Vec<i8> {
     assert!(ranks.len() == 3);
@@ -140,71 +113,33 @@ pub fn is_oesd_possible(flop: &str) -> bool {
     let oesd_possible = no_straight_possible && diffs.iter().any(|diff| *diff == 2 || *diff == 3);
 
     let a_draw = ranks.iter().any(|rank| *rank == 'A')
-        && num_card_category(flop, CardCategory::Broadway) == 2;
+        && num_card_category(flop, RankCategory::Broadway) == 2;
 
     oesd_possible && !a_draw
 }
+
+/// Tests ///
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn test_get_category() {
-        assert_eq!(get_category(&'A'), CardCategory::Broadway);
-        assert_eq!(get_category(&'K'), CardCategory::Broadway);
-        assert_eq!(get_category(&'Q'), CardCategory::Broadway);
-        assert_eq!(get_category(&'J'), CardCategory::Broadway);
-        assert_eq!(get_category(&'T'), CardCategory::Broadway);
-        assert_eq!(get_category(&'9'), CardCategory::Middling);
-        assert_eq!(get_category(&'8'), CardCategory::Middling);
-        assert_eq!(get_category(&'7'), CardCategory::Middling);
-        assert_eq!(get_category(&'6'), CardCategory::Low);
-        assert_eq!(get_category(&'5'), CardCategory::Low);
-        assert_eq!(get_category(&'4'), CardCategory::Low);
-        assert_eq!(get_category(&'3'), CardCategory::Low);
-        assert_eq!(get_category(&'2'), CardCategory::Low);
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_get_category_invalid() {
-        get_category(&'a');
-    }
-
-    #[test]
-    fn test_get_value() {
-        assert_eq!(get_value(&'A'), 12);
-        assert_eq!(get_value(&'K'), 11);
-        assert_eq!(get_value(&'Q'), 10);
-        assert_eq!(get_value(&'J'), 9);
-        assert_eq!(get_value(&'T'), 8);
-        assert_eq!(get_value(&'9'), 7);
-        assert_eq!(get_value(&'8'), 6);
-        assert_eq!(get_value(&'7'), 5);
-        assert_eq!(get_value(&'6'), 4);
-        assert_eq!(get_value(&'5'), 3);
-        assert_eq!(get_value(&'4'), 2);
-        assert_eq!(get_value(&'3'), 1);
-        assert_eq!(get_value(&'2'), 0);
-    }
-
-    #[test]
     fn test_num_card_category() {
         let flop = "3h9cTh";
-        assert_eq!(num_card_category(flop, CardCategory::Broadway), 1);
-        assert_eq!(num_card_category(flop, CardCategory::Middling), 1);
-        assert_eq!(num_card_category(flop, CardCategory::Low), 1);
+        assert_eq!(num_card_category(flop, RankCategory::Broadway), 1);
+        assert_eq!(num_card_category(flop, RankCategory::Middling), 1);
+        assert_eq!(num_card_category(flop, RankCategory::Low), 1);
 
         let flop = "AsAc6h";
-        assert_eq!(num_card_category(flop, CardCategory::Broadway), 2);
-        assert_eq!(num_card_category(flop, CardCategory::Middling), 0);
-        assert_eq!(num_card_category(flop, CardCategory::Low), 1);
+        assert_eq!(num_card_category(flop, RankCategory::Broadway), 2);
+        assert_eq!(num_card_category(flop, RankCategory::Middling), 0);
+        assert_eq!(num_card_category(flop, RankCategory::Low), 1);
 
         let flop = "Qc9h7h";
-        assert_eq!(num_card_category(flop, CardCategory::Broadway), 1);
-        assert_eq!(num_card_category(flop, CardCategory::Middling), 2);
-        assert_eq!(num_card_category(flop, CardCategory::Low), 0);
+        assert_eq!(num_card_category(flop, RankCategory::Broadway), 1);
+        assert_eq!(num_card_category(flop, RankCategory::Middling), 2);
+        assert_eq!(num_card_category(flop, RankCategory::Low), 0);
     }
 
     #[test]
