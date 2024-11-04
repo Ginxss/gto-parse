@@ -1,4 +1,4 @@
-use crate::board::validators::{is_valid_card, is_valid_flop, is_valid_rank, is_valid_suit};
+use crate::board::util::validators::{is_valid_card, is_valid_flop, is_valid_rank, is_valid_suit};
 
 pub fn get_rank(flop: &str, i: usize) -> char {
     assert!(is_valid_flop(flop));

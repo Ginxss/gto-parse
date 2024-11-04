@@ -1,13 +1,13 @@
 /*
  * TODO:
- * - Modifiers
  * - Color Code Table
  * - Data Add cleanup
  * - Paired Boards (as modifier?)
- * - Tests
  * - Duplicate checks
- * - Auto sorting of high to low cards
  */
+
+mod board;
+mod files;
 
 use std::{
     env,
@@ -18,8 +18,10 @@ use std::{
 
 use prettytable::{row, Table};
 
-mod board;
-mod files;
+use board::{
+    flop_height::{is_1bw, is_2bw, is_3bw, is_low, is_middling},
+    suits::{is_monotone, is_rainbow, is_twotone},
+};
 
 type Betsize = String;
 type Positions = (String, String);
@@ -207,19 +209,19 @@ fn build_datas(
                 .filter(|data| match categories.len() {
                     0 => true,
                     _ => {
-                        collect_1bw && board::is_1bw(&data.board)
-                            || collect_2bw && board::is_2bw(&data.board)
-                            || collect_3bw && board::is_3bw(&data.board)
-                            || collect_mid && board::is_middling(&data.board)
-                            || collect_low && board::is_low(&data.board)
+                        collect_1bw && is_1bw(&data.board)
+                            || collect_2bw && is_2bw(&data.board)
+                            || collect_3bw && is_3bw(&data.board)
+                            || collect_mid && is_middling(&data.board)
+                            || collect_low && is_low(&data.board)
                     }
                 })
                 .filter(|data| match modifiers.len() {
                     0 => true,
                     _ => {
-                        collect_rb && board::is_rainbow(&data.board)
-                            || collect_tt && board::is_twotone(&data.board)
-                            || collect_mono && board::is_monotone(&data.board)
+                        collect_rb && is_rainbow(&data.board)
+                            || collect_tt && is_twotone(&data.board)
+                            || collect_mono && is_monotone(&data.board)
                     }
                 });
 
