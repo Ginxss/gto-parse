@@ -18,6 +18,7 @@ fn get_diffs(ranks: &Vec<char>) -> Vec<i8> {
         .collect();
 
     assert!(diffs.len() == 2);
+    assert!(diffs.iter().all(|diff| *diff >= 0 && *diff <= 12));
 
     diffs
 }
@@ -25,7 +26,10 @@ fn get_diffs(ranks: &Vec<char>) -> Vec<i8> {
 pub fn is_straight_possible(flop: &str) -> bool {
     assert!(is_valid_flop(flop));
 
-    ranks_allow_straight(&get_ranks(flop))
+    let ranks = get_ranks(flop);
+    let diffs = get_diffs(&ranks);
+
+    ranks_allow_straight(&ranks, &diffs)
 }
 
 // Only OESD, no straight
@@ -35,17 +39,32 @@ pub fn is_oesd_possible(flop: &str) -> bool {
     let ranks = get_ranks(flop);
     let diffs = get_diffs(&ranks);
 
-    let no_straight_possible = !ranks_allow_straight(&ranks);
-    let oesd_possible = no_straight_possible && diffs.iter().any(|diff| *diff <= 3);
+    let no_straight = !ranks_allow_straight(&ranks, &diffs);
+    let oesd = diffs.iter().any(|diff| *diff <= 3);
+    let ahi_gutshot = ranks.contains(&'A') && num_card_category(flop, RankCategory::Broadway) == 2;
 
-    let a_draw = ranks.iter().any(|rank| *rank == 'A')
-        && num_card_category(flop, RankCategory::Broadway) == 2;
-
-    oesd_possible && !a_draw
+    no_straight && oesd && !ahi_gutshot
 }
 
-fn ranks_allow_straight(ranks: &Vec<char>) -> bool {
-    let normal_straight_possible = get_diffs(&ranks).iter().sum::<i8>() <= 4;
+// Only gutshot, no OESD or straight
+pub fn is_gutshot_possible(flop: &str) -> bool {
+    assert!(is_valid_flop(flop));
+
+    let ranks = get_ranks(flop);
+    let diffs = get_diffs(&ranks);
+
+    let no_straight = !ranks_allow_straight(&ranks, &diffs);
+    let normal_gutshot = diffs.iter().any(|diff| *diff == 4);
+    // TODO: Besser mit alternate mapping mit A = -1?
+    let ahi_gutshot = ranks.contains(&'A')
+        && (num_card_category(flop, RankCategory::Broadway) == 2
+            || ranks.iter().filter(|rank| is_wheel_rank(rank)).count() == 2);
+
+    no_straight && (normal_gutshot || ahi_gutshot)
+}
+
+fn ranks_allow_straight(ranks: &Vec<char>, diffs: &Vec<i8>) -> bool {
+    let normal_straight_possible = diffs.iter().sum::<i8>() <= 4;
     let wheel_straight_possible = ranks.iter().all(|rank| is_wheel_rank(rank));
 
     normal_straight_possible || wheel_straight_possible
@@ -76,5 +95,19 @@ mod tests {
         assert!(!is_oesd_possible("AsJc8h"));
         assert!(!is_oesd_possible("AsKc8h"));
         assert!(!is_oesd_possible("Ks8h3c"));
+    }
+
+    #[test]
+    fn test_is_gutshot_possible() {
+        assert!(is_gutshot_possible("Ks8c4h"));
+        assert!(!is_gutshot_possible("Ks8c5h"));
+        assert!(is_gutshot_possible("Ks9c4h"));
+        assert!(!is_gutshot_possible("KsJc4h"));
+        assert!(!is_gutshot_possible("Ac2h4h"));
+        assert!(!is_gutshot_possible("Ac2h5h"));
+        assert!(is_gutshot_possible("Ac2h6h"));
+        assert!(is_gutshot_possible("Ac9h5h"));
+        assert!(is_gutshot_possible("AcKh6h"));
+        assert!(is_gutshot_possible("Ac9h4h"));
     }
 }
