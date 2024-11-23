@@ -1,3 +1,3 @@
 pub mod accessors;
-pub mod rank_properties;
+pub mod properties;
 pub mod validators;

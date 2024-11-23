@@ -39,6 +39,13 @@ pub fn is_valid_flop(flop: &str) -> bool {
     unique_cards.len() == 3 && unique_cards.iter().all(|card| is_valid_card(card))
 }
 
+pub fn is_valid_value(value: &i8) -> bool {
+    match value {
+        0..=12 => true,
+        _ => false,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -63,7 +70,7 @@ mod tests {
             .all(|rank| is_wheel_rank(rank)));
 
         assert!(
-            ['6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'a', 'ö', 't', 'R', 'L', '.']
+            ['6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'a', 'ö', 't', 'R', 'L', '.', 's', 'c']
                 .iter()
                 .all(|rank| !is_wheel_rank(rank))
         );
@@ -84,9 +91,11 @@ mod tests {
             .iter()
             .all(|card| is_valid_card(card)));
 
-        assert!(["A", "js", "KK", "TD", "Tdd", "6d2c", "Qa", "QdQ"]
-            .iter()
-            .all(|card| !is_valid_card(card)));
+        assert!(
+            ["A", "js", "KK", "TD", "Tdd", "6d2c", "Qa", "QdQ", "hh", ".."]
+                .iter()
+                .all(|card| !is_valid_card(card))
+        );
     }
 
     #[test]
@@ -96,9 +105,19 @@ mod tests {
             .all(|flop| is_valid_flop(flop)));
 
         assert!([
-            "AhKs", "AhKs9", "AhKs9l", "AhKs7hh", "AhKs7h8", "ahKs7c", "Kd2d2d", "n", "......"
+            "AhKs", "AhKs9", "AhKs9l", "AhKs7hh", "AhKs7h8", "ahKs7c", "Kd2d2d", "n", "AAdsKc",
+            "......"
         ]
         .iter()
         .all(|flop| !is_valid_flop(flop)));
+    }
+
+    #[test]
+    fn test_is_valid_value() {
+        assert!((0..=12).all(|value| is_valid_value(&value)));
+
+        assert!([-1, 13, 127, -128]
+            .iter()
+            .all(|value| !is_valid_value(value)));
     }
 }

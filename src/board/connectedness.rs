@@ -1,24 +1,50 @@
-use crate::board::{
-    flop_height::num_card_category,
-    util::{
-        accessors::get_ranks,
-        rank_properties::{get_value, RankCategory},
-        validators::{is_valid_flop, is_valid_rank, is_wheel_rank},
-    },
+use std::cmp::Ordering;
+
+use crate::board::util::{
+    accessors::get_ranks,
+    properties::{get_value, num_category, RankCategory},
+    validators::{is_valid_flop, is_valid_rank, is_valid_value, is_wheel_rank},
 };
 
-fn get_diffs(ranks: &Vec<char>) -> Vec<i8> {
-    assert!(ranks.len() == 3);
+fn sorted_unique(ranks: &Vec<char>) -> Vec<char> {
+    assert!((1..=3).contains(&ranks.len()));
     assert!(ranks.iter().all(|rank| is_valid_rank(rank)));
 
+    let mut ranks = ranks.clone();
+    let original_len = ranks.len();
+
+    ranks.sort_by(|rank1, rank2| {
+        let diff = get_value(rank1) - get_value(rank2);
+        if diff < 0 {
+            Ordering::Less
+        } else if diff > 0 {
+            Ordering::Greater
+        } else {
+            Ordering::Equal
+        }
+        .reverse()
+    });
+    ranks.dedup();
+
+    assert!(ranks.len() <= original_len);
+    assert!(ranks.iter().all(|rank| is_valid_rank(rank)));
+
+    ranks
+}
+
+fn get_diffs(ranks: &Vec<char>) -> Vec<i8> {
+    assert!((1..=3).contains(&ranks.len()));
+    assert!(ranks.iter().all(|rank| is_valid_rank(rank)));
+
+    let ranks = sorted_unique(ranks);
     let diffs: Vec<i8> = ranks
         .windows(2)
         .map(|ranks| get_value(&ranks[0]) - get_value(&ranks[1]))
         .map(|diff| diff.abs())
         .collect();
 
-    assert!(diffs.len() == 2);
-    assert!(diffs.iter().all(|diff| *diff >= 0 && *diff <= 12));
+    assert!(diffs.len() == ranks.len() - 1);
+    assert!(diffs.iter().all(|diff| is_valid_value(diff)));
 
     diffs
 }
@@ -26,48 +52,51 @@ fn get_diffs(ranks: &Vec<char>) -> Vec<i8> {
 pub fn is_straight_possible(flop: &str) -> bool {
     assert!(is_valid_flop(flop));
 
-    let ranks = get_ranks(flop);
-    let diffs = get_diffs(&ranks);
+    let ranks = sorted_unique(&get_ranks(flop));
+    if ranks.len() < 3 {
+        return false;
+    }
 
-    ranks_allow_straight(&ranks, &diffs)
+    let normal_straight = get_diffs(&ranks).iter().sum::<i8>() <= 4;
+    let wheel_straight = ranks.iter().all(|rank| is_wheel_rank(rank));
+
+    normal_straight || wheel_straight
 }
 
 // Only OESD, no straight
 pub fn is_oesd_possible(flop: &str) -> bool {
     assert!(is_valid_flop(flop));
 
-    let ranks = get_ranks(flop);
-    let diffs = get_diffs(&ranks);
+    if is_straight_possible(flop) {
+        return false;
+    }
 
-    let no_straight = !ranks_allow_straight(&ranks, &diffs);
-    let oesd = diffs.iter().any(|diff| *diff <= 3);
-    let ahi_gutshot = ranks.contains(&'A') && num_card_category(flop, RankCategory::Broadway) == 2;
+    let ranks_no_a = get_ranks(flop)
+        .into_iter()
+        .filter(|rank| *rank != 'A')
+        .collect();
 
-    no_straight && oesd && !ahi_gutshot
+    get_diffs(&ranks_no_a).iter().any(|diff| *diff <= 3)
 }
 
 // Only gutshot, no OESD or straight
 pub fn is_gutshot_possible(flop: &str) -> bool {
     assert!(is_valid_flop(flop));
 
-    let ranks = get_ranks(flop);
-    let diffs = get_diffs(&ranks);
+    if is_straight_possible(flop) || is_oesd_possible(flop) {
+        return false;
+    }
 
-    let no_straight = !ranks_allow_straight(&ranks, &diffs);
-    let normal_gutshot = diffs.iter().any(|diff| *diff == 4);
-    // TODO: Besser mit alternate mapping mit A = -1?
-    let ahi_gutshot = ranks.contains(&'A')
-        && (num_card_category(flop, RankCategory::Broadway) == 2
-            || ranks.iter().filter(|rank| is_wheel_rank(rank)).count() == 2);
+    let ranks = sorted_unique(&get_ranks(flop));
 
-    no_straight && (normal_gutshot || ahi_gutshot)
-}
+    let normal_gutshot = get_diffs(&ranks).iter().any(|diff| *diff == 4);
 
-fn ranks_allow_straight(ranks: &Vec<char>, diffs: &Vec<i8>) -> bool {
-    let normal_straight_possible = diffs.iter().sum::<i8>() <= 4;
-    let wheel_straight_possible = ranks.iter().all(|rank| is_wheel_rank(rank));
+    let ahi = ranks.contains(&'A');
+    let another_bw = num_category(flop, &RankCategory::Broadway) == 2;
+    let another_wheel = ranks.iter().filter(|rank| is_wheel_rank(rank)).count() == 2;
+    let ahi_gutshot = ahi && (another_bw || another_wheel);
 
-    normal_straight_possible || wheel_straight_possible
+    normal_gutshot || ahi_gutshot
 }
 
 #[cfg(test)]
@@ -75,13 +104,50 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_sorted_unique() {
+        assert_eq!(sorted_unique(&vec!['K', '5', 'K']), vec!['K', '5']);
+        assert_eq!(sorted_unique(&vec!['K', '5', '7']), vec!['K', '7', '5']);
+        assert_eq!(sorted_unique(&vec!['2', '5', '6']), vec!['6', '5', '2']);
+        assert_eq!(sorted_unique(&vec!['J', '8', '6']), vec!['J', '8', '6']);
+        assert_eq!(sorted_unique(&vec!['8', '8', '8']), vec!['8']);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_sorted_unique_vec_too_short() {
+        sorted_unique(&vec![]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_sorted_unique_vec_too_long() {
+        sorted_unique(&vec!['A', 'K', 'T', 'J']);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_sorted_unique_invalid_rank() {
+        sorted_unique(&vec!['A', 'K', '1']);
+    }
+
+    #[test]
     fn test_is_straight_possible() {
         assert!(is_straight_possible("Ts9c8h"));
-        assert!(is_straight_possible("Ts9c7h"));
+        assert!(is_straight_possible("7s9cTh"));
         assert!(is_straight_possible("Ts9c6h"));
-        assert!(!is_straight_possible("Ts9c5h"));
         assert!(is_straight_possible("As2c3h"));
+        assert!(is_straight_possible("AcKsTh"));
+        assert!(!is_straight_possible("7s9c7h"));
+        assert!(!is_straight_possible("Ts9c5h"));
         assert!(!is_straight_possible("Ks2c3h"));
+        assert!(!is_straight_possible("AcKs3h"));
+        assert!(!is_straight_possible("KhTsTc"));
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_is_straight_possible_invalid_flop() {
+        is_straight_possible("ÄsKsTd");
     }
 
     #[test]
@@ -91,23 +157,44 @@ mod tests {
         assert!(is_oesd_possible("Qh9h2h"));
         assert!(is_oesd_possible("Jd6c3c"));
         assert!(is_oesd_possible("Ks2c3h"));
+        assert!(is_oesd_possible("As5c6h"));
+        assert!(is_oesd_possible("As7c4h"));
+        assert!(is_oesd_possible("AsTc7h"));
+        assert!(is_oesd_possible("KsThTc"));
+        assert!(!is_oesd_possible("AsTc6h"));
         assert!(!is_oesd_possible("As2c3h"));
-        assert!(!is_oesd_possible("AsJc8h"));
+        assert!(!is_oesd_possible("As8c8h"));
+        assert!(!is_oesd_possible("AsJc7h"));
         assert!(!is_oesd_possible("AsKc8h"));
         assert!(!is_oesd_possible("Ks8h3c"));
+        assert!(!is_oesd_possible("Ks8h8c"));
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_is_oesd_possible_invalid_flop() {
+        is_oesd_possible("AsKsÜd");
     }
 
     #[test]
     fn test_is_gutshot_possible() {
         assert!(is_gutshot_possible("Ks8c4h"));
-        assert!(!is_gutshot_possible("Ks8c5h"));
         assert!(is_gutshot_possible("Ks9c4h"));
-        assert!(!is_gutshot_possible("KsJc4h"));
-        assert!(!is_gutshot_possible("Ac2h4h"));
-        assert!(!is_gutshot_possible("Ac2h5h"));
         assert!(is_gutshot_possible("Ac2h6h"));
         assert!(is_gutshot_possible("Ac9h5h"));
         assert!(is_gutshot_possible("AcKh6h"));
         assert!(is_gutshot_possible("Ac9h4h"));
+        assert!(!is_gutshot_possible("AcKhTh"));
+        assert!(!is_gutshot_possible("Ks8c5h"));
+        assert!(!is_gutshot_possible("KsJc4h"));
+        assert!(!is_gutshot_possible("Ac2h4h"));
+        assert!(!is_gutshot_possible("Ac5h6s"));
+        assert!(!is_gutshot_possible("7c5c5s"));
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_is_gutshot_possible_invalid_flop() {
+        is_gutshot_possible(" AsKsTd");
     }
 }

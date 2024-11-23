@@ -1,3 +1,5 @@
+use crate::board::util::{accessors::get_ranks, validators::is_valid_flop};
+
 #[derive(Debug, PartialEq)]
 pub enum RankCategory {
     Broadway,
@@ -10,8 +12,22 @@ pub fn get_category(rank: &char) -> RankCategory {
         '2' | '3' | '4' | '5' | '6' => RankCategory::Low,
         '9' | '8' | '7' => RankCategory::Middling,
         'T' | 'J' | 'Q' | 'K' | 'A' => RankCategory::Broadway,
-        _ => panic!("Invalid rank"),
+        invalid_rank => panic!("Invalid rank: {}", invalid_rank),
     }
+}
+
+pub fn num_category(flop: &str, filter_category: &RankCategory) -> usize {
+    assert!(is_valid_flop(flop));
+
+    let num_category = get_ranks(flop)
+        .iter()
+        .map(|rank| get_category(&rank))
+        .filter(|category| category == filter_category)
+        .count();
+
+    assert!(num_category <= 3);
+
+    num_category
 }
 
 pub fn get_value(rank: &char) -> i8 {
@@ -29,7 +45,7 @@ pub fn get_value(rank: &char) -> i8 {
         'Q' => 10,
         'K' => 11,
         'A' => 12,
-        _ => panic!("Invalid rank"),
+        invalid_rank => panic!("Invalid rank: {}", invalid_rank),
     }
 }
 
@@ -58,6 +74,30 @@ mod tests {
     #[should_panic]
     fn test_get_category_invalid() {
         get_category(&'a');
+    }
+
+    #[test]
+    fn test_num_category() {
+        let flop = "3h9cTh";
+        assert_eq!(num_category(flop, &RankCategory::Broadway), 1);
+        assert_eq!(num_category(flop, &RankCategory::Middling), 1);
+        assert_eq!(num_category(flop, &RankCategory::Low), 1);
+
+        let flop = "AsAc6h";
+        assert_eq!(num_category(flop, &RankCategory::Broadway), 2);
+        assert_eq!(num_category(flop, &RankCategory::Middling), 0);
+        assert_eq!(num_category(flop, &RankCategory::Low), 1);
+
+        let flop = "Qc9h7h";
+        assert_eq!(num_category(flop, &RankCategory::Broadway), 1);
+        assert_eq!(num_category(flop, &RankCategory::Middling), 2);
+        assert_eq!(num_category(flop, &RankCategory::Low), 0);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_num_category_invalid() {
+        num_category("3d0cAh", &RankCategory::Broadway);
     }
 
     #[test]
