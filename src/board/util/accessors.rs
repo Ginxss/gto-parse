@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 use crate::board::util::validators::{is_valid_card, is_valid_flop, is_valid_rank, is_valid_suit};
 
 pub fn get_rank(flop: &str, i: usize) -> char {
@@ -171,7 +169,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_get_card_invalid_board() {
-        get_card("KsAc77", 1);
+        get_card("KsAc7h ", 1);
     }
 
     #[test]
