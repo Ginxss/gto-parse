@@ -44,8 +44,8 @@ mod tests {
 
     #[test]
     fn test_get_max_suit_count() {
-        assert_eq!(get_max_suit_count("Qc9h7h"), 2);
         assert_eq!(get_max_suit_count("Qc9s7h"), 1);
+        assert_eq!(get_max_suit_count("Qc9h7h"), 2);
         assert_eq!(get_max_suit_count("Qc9c7c"), 3);
     }
 
@@ -59,8 +59,8 @@ mod tests {
     fn test_is_rainbow() {
         assert!(is_rainbow("6s5h4c"));
         assert!(is_rainbow("6s5d4h"));
-        assert!(!is_rainbow("5c3h2h"));
-        assert!(!is_rainbow("Ah2h3h"));
+        assert!(!is_rainbow("6c5h4h"));
+        assert!(!is_rainbow("6h5h4h"));
     }
 
     #[test]
@@ -71,10 +71,10 @@ mod tests {
 
     #[test]
     fn test_is_twotone() {
-        assert!(is_twotone("6s5s4c"));
-        assert!(is_twotone("6s5d4d"));
-        assert!(!is_twotone("5c3h2s"));
-        assert!(!is_twotone("Ac2c3c"));
+        assert!(is_twotone("9s5s4c"));
+        assert!(is_twotone("9s5d4d"));
+        assert!(!is_twotone("9c5h4s"));
+        assert!(!is_twotone("9c5c4c"));
     }
 
     #[test]
@@ -85,15 +85,15 @@ mod tests {
 
     #[test]
     fn test_is_monotone() {
-        assert!(is_monotone("6h5h4h"));
-        assert!(is_monotone("5c3c2c"));
-        assert!(!is_monotone("Ac2h3s"));
-        assert!(!is_monotone("Tc8sKs"));
+        assert!(is_monotone("Th5h4h"));
+        assert!(is_monotone("Tc5c4c"));
+        assert!(!is_monotone("Tc5h4s"));
+        assert!(!is_monotone("Tc5s4s"));
     }
 
     #[test]
     #[should_panic]
     fn test_is_monotone_invalid_flop() {
-        is_monotone("10c6h5s");
+        is_monotone("7h6h6h");
     }
 }
