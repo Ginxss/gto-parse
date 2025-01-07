@@ -2,6 +2,32 @@ use std::collections::HashMap;
 
 use crate::board::util::{accessors::get_suits, validators::is_valid_flop};
 
+#[derive(Debug, PartialEq)]
+pub enum FlopSuitType {
+    Rainbow,
+    Twotone,
+    Montone,
+}
+
+impl FlopSuitType {
+    pub fn from_str(string: &str) -> FlopSuitType {
+        match string {
+            "R" => FlopSuitType::Rainbow,
+            "T" => FlopSuitType::Twotone,
+            "M" => FlopSuitType::Montone,
+            other => panic!("Invalid flop suit type string: {}", other),
+        }
+    }
+
+    pub fn as_str(&self) -> &str {
+        match self {
+            FlopSuitType::Rainbow => "R",
+            FlopSuitType::Twotone => "T",
+            FlopSuitType::Montone => "M",
+        }
+    }
+}
+
 fn get_max_suit_count(flop: &str) -> usize {
     assert!(is_valid_flop(flop));
 
@@ -36,6 +62,17 @@ pub fn is_monotone(flop: &str) -> bool {
     assert!(is_valid_flop(flop));
 
     get_max_suit_count(flop) == 3
+}
+
+pub fn get_suit_type(flop: &str) -> FlopSuitType {
+    assert!(is_valid_flop(flop));
+
+    match get_max_suit_count(flop) {
+        1 => FlopSuitType::Rainbow,
+        2 => FlopSuitType::Twotone,
+        3 => FlopSuitType::Montone,
+        other => panic!("Invalid suit count: {}", other),
+    }
 }
 
 #[cfg(test)]
@@ -95,5 +132,38 @@ mod tests {
     #[should_panic]
     fn test_is_monotone_invalid_flop() {
         is_monotone("7h6h6h");
+    }
+
+    #[test]
+    fn test_get_suit_type() {
+        assert_eq!(get_suit_type("JcTh7s"), FlopSuitType::Rainbow);
+        assert_eq!(get_suit_type("JcTh7h"), FlopSuitType::Twotone);
+        assert_eq!(get_suit_type("JsTs7s"), FlopSuitType::Montone);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_get_suit_type_invalid_flop() {
+        get_suit_type("As Kh Td");
+    }
+
+    #[test]
+    fn test_flop_suit_type_from_str() {
+        assert_eq!(FlopSuitType::from_str("R"), FlopSuitType::Rainbow);
+        assert_eq!(FlopSuitType::from_str("T"), FlopSuitType::Twotone);
+        assert_eq!(FlopSuitType::from_str("M"), FlopSuitType::Montone);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_flop_suit_type_from_str_invalid_str() {
+        FlopSuitType::from_str("invalid");
+    }
+
+    #[test]
+    fn test_flop_suit_type_as_str() {
+        assert_eq!(FlopSuitType::Rainbow.as_str(), "R");
+        assert_eq!(FlopSuitType::Twotone.as_str(), "T");
+        assert_eq!(FlopSuitType::Montone.as_str(), "M");
     }
 }

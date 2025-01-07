@@ -7,7 +7,7 @@ pub enum RankCategory {
     Low,
 }
 
-pub fn get_category(rank: &char) -> RankCategory {
+pub fn get_rank_category(rank: &char) -> RankCategory {
     match rank {
         '2' | '3' | '4' | '5' | '6' => RankCategory::Low,
         '9' | '8' | '7' => RankCategory::Middling,
@@ -16,12 +16,12 @@ pub fn get_category(rank: &char) -> RankCategory {
     }
 }
 
-pub fn num_category(flop: &str, filter_category: &RankCategory) -> usize {
+pub fn num_rank_category(flop: &str, filter_category: &RankCategory) -> usize {
     assert!(is_valid_flop(flop));
 
     let num_category = get_ranks(flop)
         .iter()
-        .map(|rank| get_category(&rank))
+        .map(|rank| get_rank_category(&rank))
         .filter(|category| category == filter_category)
         .count();
 
@@ -55,49 +55,49 @@ mod tests {
 
     #[test]
     fn test_get_category() {
-        assert_eq!(get_category(&'A'), RankCategory::Broadway);
-        assert_eq!(get_category(&'K'), RankCategory::Broadway);
-        assert_eq!(get_category(&'Q'), RankCategory::Broadway);
-        assert_eq!(get_category(&'J'), RankCategory::Broadway);
-        assert_eq!(get_category(&'T'), RankCategory::Broadway);
-        assert_eq!(get_category(&'9'), RankCategory::Middling);
-        assert_eq!(get_category(&'8'), RankCategory::Middling);
-        assert_eq!(get_category(&'7'), RankCategory::Middling);
-        assert_eq!(get_category(&'6'), RankCategory::Low);
-        assert_eq!(get_category(&'5'), RankCategory::Low);
-        assert_eq!(get_category(&'4'), RankCategory::Low);
-        assert_eq!(get_category(&'3'), RankCategory::Low);
-        assert_eq!(get_category(&'2'), RankCategory::Low);
+        assert_eq!(get_rank_category(&'A'), RankCategory::Broadway);
+        assert_eq!(get_rank_category(&'K'), RankCategory::Broadway);
+        assert_eq!(get_rank_category(&'Q'), RankCategory::Broadway);
+        assert_eq!(get_rank_category(&'J'), RankCategory::Broadway);
+        assert_eq!(get_rank_category(&'T'), RankCategory::Broadway);
+        assert_eq!(get_rank_category(&'9'), RankCategory::Middling);
+        assert_eq!(get_rank_category(&'8'), RankCategory::Middling);
+        assert_eq!(get_rank_category(&'7'), RankCategory::Middling);
+        assert_eq!(get_rank_category(&'6'), RankCategory::Low);
+        assert_eq!(get_rank_category(&'5'), RankCategory::Low);
+        assert_eq!(get_rank_category(&'4'), RankCategory::Low);
+        assert_eq!(get_rank_category(&'3'), RankCategory::Low);
+        assert_eq!(get_rank_category(&'2'), RankCategory::Low);
     }
 
     #[test]
     #[should_panic]
     fn test_get_category_invalid() {
-        get_category(&'a');
+        get_rank_category(&'a');
     }
 
     #[test]
     fn test_num_category() {
         let flop = "3h9cTh";
-        assert_eq!(num_category(flop, &RankCategory::Broadway), 1);
-        assert_eq!(num_category(flop, &RankCategory::Middling), 1);
-        assert_eq!(num_category(flop, &RankCategory::Low), 1);
+        assert_eq!(num_rank_category(flop, &RankCategory::Broadway), 1);
+        assert_eq!(num_rank_category(flop, &RankCategory::Middling), 1);
+        assert_eq!(num_rank_category(flop, &RankCategory::Low), 1);
 
         let flop = "AsAc6h";
-        assert_eq!(num_category(flop, &RankCategory::Broadway), 2);
-        assert_eq!(num_category(flop, &RankCategory::Middling), 0);
-        assert_eq!(num_category(flop, &RankCategory::Low), 1);
+        assert_eq!(num_rank_category(flop, &RankCategory::Broadway), 2);
+        assert_eq!(num_rank_category(flop, &RankCategory::Middling), 0);
+        assert_eq!(num_rank_category(flop, &RankCategory::Low), 1);
 
         let flop = "Qc9h7h";
-        assert_eq!(num_category(flop, &RankCategory::Broadway), 1);
-        assert_eq!(num_category(flop, &RankCategory::Middling), 2);
-        assert_eq!(num_category(flop, &RankCategory::Low), 0);
+        assert_eq!(num_rank_category(flop, &RankCategory::Broadway), 1);
+        assert_eq!(num_rank_category(flop, &RankCategory::Middling), 2);
+        assert_eq!(num_rank_category(flop, &RankCategory::Low), 0);
     }
 
     #[test]
     #[should_panic]
     fn test_num_category_invalid() {
-        num_category("3d0cAh", &RankCategory::Broadway);
+        num_rank_category("3d0cAh", &RankCategory::Broadway);
     }
 
     #[test]

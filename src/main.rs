@@ -6,6 +6,7 @@
  * - Duplicate checks
  */
 
+mod args;
 mod board;
 mod files;
 
@@ -23,9 +24,6 @@ use board::{
     suits::{is_monotone, is_rainbow, is_twotone},
 };
 
-type Betsize = String;
-type Positions = (String, String);
-
 const DATA_DIR: &str = "./data";
 
 #[derive(Debug)]
@@ -36,33 +34,6 @@ struct Data {
     ev: f32,
     bet_freq: f32,
     check_freq: f32,
-}
-
-#[derive(Debug, PartialEq)]
-enum BoardCategory {
-    SingleBW,
-    DoubleBW,
-    TripleBW,
-    Middling,
-    Low,
-}
-
-#[derive(Debug, PartialEq)]
-enum Modifier {
-    Rainbow,
-    Twotone,
-    Montone,
-    Disconnected,
-    TwoConnected,
-    ThreeConnected,
-}
-
-struct Args {
-    categories: Vec<BoardCategory>,
-    modifiers: Vec<Modifier>,
-    betsizes: Vec<Betsize>,
-    positions: Positions,
-    actions: Vec<String>,
 }
 
 fn main() {
@@ -77,92 +48,6 @@ fn main() {
     let datas = build_datas(&positions, &betsizes, &actions, &categories, &modifiers);
 
     print_table(&datas);
-}
-
-fn read_cmd_args() -> Args {
-    enum ParseMode {
-        None,
-        Categories,
-        Modifiers,
-        Betsizes,
-        Positions,
-        ActionSequence,
-    }
-
-    let mut categories: Vec<BoardCategory> = Vec::new();
-    let mut modifiers: Vec<Modifier> = Vec::new();
-    let mut betsizes: Vec<Betsize> = Vec::new();
-    let mut positions: Vec<String> = Vec::new();
-    let mut actions: Vec<String> = Vec::new();
-
-    let mut curr_parse_mode: ParseMode = ParseMode::None;
-
-    let args_lowercase = env::args().skip(1).map(|arg| arg.to_lowercase());
-    for arg in args_lowercase {
-        match &arg[..] {
-            "-c" => {
-                curr_parse_mode = ParseMode::Categories;
-                continue;
-            }
-            "-m" => {
-                curr_parse_mode = ParseMode::Modifiers;
-                continue;
-            }
-            "-b" => {
-                curr_parse_mode = ParseMode::Betsizes;
-                continue;
-            }
-            "-p" => {
-                curr_parse_mode = ParseMode::Positions;
-                continue;
-            }
-            "-a" => {
-                curr_parse_mode = ParseMode::ActionSequence;
-                continue;
-            }
-
-            token => match curr_parse_mode {
-                ParseMode::Categories => match token {
-                    "1bw" => categories.push(BoardCategory::SingleBW),
-                    "2bw" => categories.push(BoardCategory::DoubleBW),
-                    "3bw" => categories.push(BoardCategory::TripleBW),
-                    "mid" | "middling" => categories.push(BoardCategory::Middling),
-                    "low" => categories.push(BoardCategory::Low),
-                    _ => panic!(),
-                },
-                ParseMode::Modifiers => match token {
-                    "r" | "rb" => modifiers.push(Modifier::Rainbow),
-                    "t" | "tt" => modifiers.push(Modifier::Twotone),
-                    "m" | "mt" => modifiers.push(Modifier::Montone),
-                    "dc" => modifiers.push(Modifier::Disconnected),
-                    "2c" => modifiers.push(Modifier::TwoConnected),
-                    "3c" => modifiers.push(Modifier::ThreeConnected),
-                    _ => panic!(),
-                },
-                ParseMode::Betsizes => match token.parse::<i32>() {
-                    Ok(_) => betsizes.push(arg),
-                    Err(_) => panic!(),
-                },
-                ParseMode::Positions => positions.push(arg),
-                ParseMode::ActionSequence => actions.push(arg),
-                _ => panic!(),
-            },
-        }
-    }
-
-    assert!(positions.len() == 2);
-    assert!(!actions.is_empty());
-
-    let pos1 = positions.get(0).unwrap().to_owned();
-    let pos2 = positions.get(1).unwrap().to_owned();
-
-    Args {
-        categories,
-        modifiers,
-        betsizes,
-        positions: (pos1, pos2),
-        actions,
-    }
 }
 
 fn build_datas(

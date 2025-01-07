@@ -2,9 +2,38 @@ use std::cmp::Ordering;
 
 use crate::board::util::{
     accessors::get_ranks,
-    properties::{get_value, num_category, RankCategory},
+    properties::{get_value, num_rank_category, RankCategory},
     validators::{is_valid_flop, is_valid_rank, is_valid_value, is_wheel_rank},
 };
+
+#[derive(Debug, PartialEq)]
+pub enum FlopConnectedness {
+    Disconnected,
+    Gutshot,
+    OESD,
+    Straight,
+}
+
+impl FlopConnectedness {
+    pub fn from_str(string: &str) -> FlopConnectedness {
+        match string {
+            "DC" => FlopConnectedness::Disconnected,
+            "GS" => FlopConnectedness::Gutshot,
+            "OESD" => FlopConnectedness::OESD,
+            "STR" => FlopConnectedness::Straight,
+            other => panic!("Invalid flop connectedness string: {}", other),
+        }
+    }
+
+    pub fn as_str(&self) -> &str {
+        match self {
+            FlopConnectedness::Disconnected => "DC",
+            FlopConnectedness::Gutshot => "GS",
+            FlopConnectedness::OESD => "OESD",
+            FlopConnectedness::Straight => "STR",
+        }
+    }
+}
 
 fn sorted_unique(ranks: &Vec<char>) -> Vec<char> {
     assert!((1..=3).contains(&ranks.len()));
@@ -92,11 +121,23 @@ pub fn is_gutshot_possible(flop: &str) -> bool {
     let normal_gutshot = get_diffs(&ranks).iter().any(|diff| *diff == 4);
 
     let ahi = ranks.contains(&'A');
-    let another_bw = num_category(flop, &RankCategory::Broadway) == 2;
+    let another_bw = num_rank_category(flop, &RankCategory::Broadway) == 2;
     let another_wheel = ranks.iter().filter(|rank| is_wheel_rank(rank)).count() == 2;
     let ahi_gutshot = ahi && (another_bw || another_wheel);
 
     normal_gutshot || ahi_gutshot
+}
+
+pub fn get_connectedness(flop: &str) -> FlopConnectedness {
+    if is_straight_possible(flop) {
+        FlopConnectedness::Straight
+    } else if is_oesd_possible(flop) {
+        FlopConnectedness::OESD
+    } else if is_gutshot_possible(flop) {
+        FlopConnectedness::Gutshot
+    } else {
+        FlopConnectedness::Disconnected
+    }
 }
 
 #[cfg(test)]
@@ -196,5 +237,50 @@ mod tests {
     #[should_panic]
     fn test_is_gutshot_possible_invalid_flop() {
         is_gutshot_possible(" AsKsTd");
+    }
+
+    #[test]
+    fn test_get_connectedness() {
+        assert_eq!(get_connectedness("Ks8h3c"), FlopConnectedness::Disconnected);
+        assert_eq!(get_connectedness("Ks9h3c"), FlopConnectedness::Gutshot);
+        assert_eq!(get_connectedness("KsTh3c"), FlopConnectedness::OESD);
+        assert_eq!(get_connectedness("KsTh9c"), FlopConnectedness::Straight);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_get_connectedness_invalid_flop() {
+        get_connectedness("AsKsTd ");
+    }
+
+    #[test]
+    fn test_flop_connectedness_from_str() {
+        assert_eq!(
+            FlopConnectedness::from_str("DC"),
+            FlopConnectedness::Disconnected
+        );
+        assert_eq!(
+            FlopConnectedness::from_str("GS"),
+            FlopConnectedness::Gutshot
+        );
+        assert_eq!(FlopConnectedness::from_str("OESD"), FlopConnectedness::OESD);
+        assert_eq!(
+            FlopConnectedness::from_str("STR"),
+            FlopConnectedness::Straight
+        );
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_flop_connectedness_from_str_invalid_str() {
+        FlopConnectedness::from_str("invalid");
+    }
+
+    #[test]
+    fn test_flop_connectedness_as_str() {
+        assert_eq!(FlopConnectedness::Disconnected.as_str(), "DC");
+        assert_eq!(FlopConnectedness::Gutshot.as_str(), "GS");
+        assert_eq!(FlopConnectedness::OESD.as_str(), "OESD");
+        assert_eq!(FlopConnectedness::Straight.as_str(), "STR");
     }
 }
