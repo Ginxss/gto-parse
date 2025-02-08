@@ -7,7 +7,7 @@ use crate::board::{
 // Position
 
 #[derive(Clone)]
-enum Position {
+pub enum Position {
     LJ,
     HJ,
     CO,
@@ -17,7 +17,7 @@ enum Position {
 }
 
 impl Position {
-    fn from_str(string: &str) -> Position {
+    pub fn from_str(string: &str) -> Position {
         match string {
             "LJ" => Position::LJ,
             "HJ" => Position::HJ,
@@ -29,7 +29,7 @@ impl Position {
         }
     }
 
-    fn as_str(&self) -> &str {
+    pub fn as_str(&self) -> &str {
         match self {
             Position::LJ => "LJ",
             Position::HJ => "HJ",
@@ -41,14 +41,15 @@ impl Position {
     }
 }
 
-struct Positions {
-    ip: Position,
-    oop: Position,
+pub struct Positions {
+    pub ip: Position,
+    pub oop: Position,
 }
 
 // Betsize
 
-enum Betsize {
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Betsize {
     Size33,
     Size50,
     Size75,
@@ -56,7 +57,7 @@ enum Betsize {
 }
 
 impl Betsize {
-    fn from_str(string: &str) -> Betsize {
+    pub fn from_str(string: &str) -> Betsize {
         match string {
             "33" => Betsize::Size33,
             "50" => Betsize::Size50,
@@ -66,7 +67,7 @@ impl Betsize {
         }
     }
 
-    fn as_str(&self) -> &str {
+    pub fn as_str(&self) -> &str {
         match self {
             Betsize::Size33 => "33",
             Betsize::Size50 => "50",
@@ -78,7 +79,7 @@ impl Betsize {
 
 // Action
 
-enum Action {
+pub enum Action {
     Check,
     Bet,
     Call,
@@ -87,7 +88,7 @@ enum Action {
 }
 
 impl Action {
-    fn from_str(string: &str) -> Action {
+    pub fn from_str(string: &str) -> Action {
         match string {
             "X" => Action::Check,
             "B" => Action::Bet,
@@ -98,9 +99,10 @@ impl Action {
         }
     }
 
-    fn as_str(&self) -> &str {
+    pub fn as_str(&self) -> &str {
         match self {
-            Action::Check => "X",
+            // TODO:
+            Action::Check => "check",
             Action::Bet => "B",
             Action::Call => "C",
             Action::Raise => "R",
@@ -111,16 +113,16 @@ impl Action {
 
 // Args
 
-struct Args {
-    positions: Positions,
-    betsizes: Vec<Betsize>,
-    heights: Vec<FlopHeight>,
-    suits: Vec<FlopSuitType>,
-    connectednesses: Vec<FlopConnectedness>,
-    actions: Vec<Action>,
+pub struct Args {
+    pub positions: Positions,
+    pub betsizes: Vec<Betsize>,
+    pub heights: Vec<FlopHeight>,
+    pub suits: Vec<FlopSuitType>,
+    pub connectednesses: Vec<FlopConnectedness>,
+    pub actions: Vec<Action>,
 }
 
-fn read_cmdline_args() -> Args {
+pub fn read_cmdline_args() -> Args {
     enum ParseMode {
         None,
         Positions,

@@ -1,26 +1,38 @@
-use std::fs::{self, DirEntry};
+use std::{
+    fs::{self, DirEntry},
+    path::Path,
+};
 
-pub fn get_files(path: &str) -> Vec<DirEntry> {
+pub fn get_files(path: &Path) -> Vec<DirEntry> {
     get_dir_entries(path)
         .filter(|entry| entry.path().is_file())
         .collect()
 }
 
-pub fn get_dirs(path: &str) -> Vec<DirEntry> {
+pub fn get_dirs(path: &Path) -> Vec<DirEntry> {
     get_dir_entries(path)
         .filter(|entry| entry.path().is_dir())
         .collect()
 }
 
-fn get_dir_entries(path: &str) -> impl Iterator<Item = DirEntry> {
+fn get_dir_entries(path: &Path) -> impl Iterator<Item = DirEntry> {
+    let path_name = get_path_name(path);
+
     fs::read_dir(path)
-        .expect(&format!("Error reading directory: {:#?}", path))
+        .expect(&format!("Error reading directory: {path_name}"))
         .filter_map(Result::ok)
         .filter(|entry| !is_hidden(entry))
 }
 
+pub fn get_path_name(path: &Path) -> String {
+    path.file_stem()
+        .and_then(|x| x.to_str())
+        .map(|x| x.to_string())
+        .expect("Could not extract path name")
+}
+
 fn is_hidden(entry: &DirEntry) -> bool {
-    entry.file_name().to_string_lossy().starts_with(".")
+    get_path_name(&entry.path()).starts_with(".")
 }
 
 #[cfg(test)]
@@ -29,7 +41,7 @@ mod tests {
 
     #[test]
     fn test_get_files_contents() {
-        let test_dir = "./test_data";
+        let test_dir = Path::new("./test_data");
 
         let mut file_contents: Vec<String> = get_files(test_dir)
             .iter()
@@ -38,7 +50,7 @@ mod tests {
 
         assert_eq!(file_contents.len(), 3);
 
-        let path = |name: &str| [test_dir, name].join("/");
+        let path = |name: &str| test_dir.join(Path::new(name));
         let mut expected_file_contents = vec![
             fs::read_to_string(path("file1")).unwrap(),
             fs::read_to_string(path("file2")).unwrap(),
@@ -52,11 +64,11 @@ mod tests {
 
     #[test]
     fn test_get_dirs_names() {
-        let test_dir = "./test_data";
+        let test_dir = Path::new("./test_data");
 
         let mut dir_names: Vec<String> = get_dirs(test_dir)
             .iter()
-            .map(|dir| dir.file_name().into_string().unwrap())
+            .map(|dir| get_path_name(&dir.path()))
             .collect();
 
         assert_eq!(dir_names.len(), 3);
@@ -70,11 +82,11 @@ mod tests {
 
     #[test]
     fn test_get_dirs_subfiles() {
-        let test_dir = "./test_data";
+        let test_dir = Path::new("./test_data");
 
         let mut child_file_contents: Vec<Vec<String>> = get_dirs(test_dir)
             .iter()
-            .map(|dir| get_files(&dir.path().to_string_lossy()))
+            .map(|dir| get_files(&dir.path()))
             .map(|files| {
                 let mut contents: Vec<String> = files
                     .iter()
@@ -89,7 +101,7 @@ mod tests {
         assert_eq!(child_file_contents.len(), 3);
         assert!(child_file_contents.iter().all(|c| c.len() == 3));
 
-        let path = |dir: &str, name: &str| [test_dir, dir, name].join("/");
+        let path = |dir: &str, name: &str| test_dir.join(Path::new(dir)).join(Path::new(name));
 
         let mut contents1 = vec![
             fs::read_to_string(path("dir1", "dir1_file1")).unwrap(),
@@ -121,10 +133,10 @@ mod tests {
 
     #[test]
     fn test_get_dir_entries_names() {
-        let test_dir = "./test_data";
+        let test_dir = Path::new("./test_data");
 
         let mut entry_names: Vec<String> = get_dir_entries(test_dir)
-            .map(|dir| dir.file_name().into_string().unwrap())
+            .map(|dir| get_path_name(&dir.path()))
             .collect();
 
         assert_eq!(entry_names.len(), 6);
@@ -144,7 +156,7 @@ mod tests {
             .unwrap()
             .filter_map(Result::ok)
             .filter(|entry| is_hidden(entry))
-            .map(|entry| entry.file_name().into_string().unwrap())
+            .map(|entry| get_path_name(&entry.path()))
             .collect();
 
         let mut expected_hidden_entry_names = vec![".hidden_dir", ".hidden_file"];
@@ -152,5 +164,16 @@ mod tests {
         hidden_entry_names.sort();
         expected_hidden_entry_names.sort();
         assert_eq!(hidden_entry_names, expected_hidden_entry_names);
+    }
+
+    #[test]
+    fn test_get_path_name() {
+        let path = Path::new("./test_data");
+        let name = get_path_name(path);
+        assert_eq!(name, String::from("test_data"));
+
+        let path = Path::new("./test_data/file1.txt");
+        let name = get_path_name(path);
+        assert_eq!(name, String::from("file1"));
     }
 }
