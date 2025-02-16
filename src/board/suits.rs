@@ -75,6 +75,14 @@ pub fn get_suit_type(flop: &str) -> FlopSuitType {
     }
 }
 
+pub fn is_suit_type(flop: &str, suit: &FlopSuitType) -> bool {
+    match suit {
+        FlopSuitType::Rainbow => is_rainbow(flop),
+        FlopSuitType::Twotone => is_twotone(flop),
+        FlopSuitType::Montone => is_monotone(flop),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

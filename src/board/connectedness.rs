@@ -128,6 +128,12 @@ pub fn is_gutshot_possible(flop: &str) -> bool {
     normal_gutshot || ahi_gutshot
 }
 
+pub fn is_disconnected(flop: &str) -> bool {
+    assert!(is_valid_flop(flop));
+
+    !is_gutshot_possible(flop) && !is_oesd_possible(flop) && !is_straight_possible(flop)
+}
+
 pub fn get_connectedness(flop: &str) -> FlopConnectedness {
     if is_straight_possible(flop) {
         FlopConnectedness::Straight
@@ -137,6 +143,15 @@ pub fn get_connectedness(flop: &str) -> FlopConnectedness {
         FlopConnectedness::Gutshot
     } else {
         FlopConnectedness::Disconnected
+    }
+}
+
+pub fn is_connectedness(flop: &str, connectedness: &FlopConnectedness) -> bool {
+    match connectedness {
+        FlopConnectedness::Straight => is_straight_possible(flop),
+        FlopConnectedness::OESD => is_oesd_possible(flop),
+        FlopConnectedness::Gutshot => is_gutshot_possible(flop),
+        FlopConnectedness::Disconnected => is_disconnected(flop),
     }
 }
 

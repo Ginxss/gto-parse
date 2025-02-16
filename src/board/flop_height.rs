@@ -66,6 +66,16 @@ pub fn is_low(flop: &str) -> bool {
     num_rank_category(flop, &RankCategory::Low) == 3
 }
 
+pub fn is_height(flop: &str, height: &FlopHeight) -> bool {
+    match height {
+        FlopHeight::TripleBW => is_3bw(flop),
+        FlopHeight::DoubleBW => is_2bw(flop),
+        FlopHeight::SingleBW => is_1bw(flop),
+        FlopHeight::Middling => is_middling(flop),
+        FlopHeight::Low => is_low(flop),
+    }
+}
+
 pub fn get_height(flop: &str) -> FlopHeight {
     if is_1bw(flop) {
         FlopHeight::SingleBW

@@ -17,6 +17,14 @@ use std::{
     vec,
 };
 
+use board::{
+    connectedness::{
+        is_connectedness, is_disconnected, is_gutshot_possible, is_oesd_possible,
+        is_straight_possible, FlopConnectedness,
+    },
+    flop_height::{is_1bw, is_2bw, is_3bw, is_height, is_low, is_middling, FlopHeight},
+    suits::{is_monotone, is_rainbow, is_suit_type, is_twotone, FlopSuitType},
+};
 use prettytable::{row, Table};
 
 use args::{Action, Betsize, Positions};
@@ -90,6 +98,13 @@ fn main() {
 
     let file_contents = get_file_contents(&action_files);
 
+    let filtered_lines = filter_file_contents(
+        &file_contents,
+        &args.heights,
+        &args.suits,
+        &args.connectednesses,
+    );
+
     let data_rows = build_data_rows(&file_contents);
 
     print_table(&data_rows);
@@ -154,6 +169,45 @@ fn get_file_contents(action_files: &Vec<(Betsize, DirEntry)>) -> Vec<(Betsize, S
     action_files
         .iter()
         .map(|(betsize, file)| (betsize.clone(), fs::read_to_string(file.path()).unwrap()))
+        .collect()
+}
+
+fn filter_file_contents(
+    file_contents: &Vec<(Betsize, String)>,
+    heights: &Vec<FlopHeight>,
+    suits: &Vec<FlopSuitType>,
+    connectednesses: &Vec<FlopConnectedness>,
+) -> Vec<(Betsize, Vec<String>)> {
+    file_contents
+        .iter()
+        .map(|(betsize, file_content)| {
+            let filteres_lines: Vec<String> = file_content
+                .lines()
+                .skip(1)
+                .filter(|line| {
+                    let board = line
+                        .split('\t')
+                        .next()
+                        .expect("Error getting board from line");
+
+                    let match_height =
+                        heights.is_empty() || heights.iter().any(|height| is_height(board, height));
+
+                    let match_suits =
+                        suits.is_empty() || suits.iter().any(|suit| is_suit_type(board, suit));
+
+                    let match_connectedness = connectednesses.is_empty()
+                        || connectednesses
+                            .iter()
+                            .any(|connectedness| is_connectedness(board, connectedness));
+
+                    match_height && match_suits && match_connectedness
+                })
+                .map(|s| s.to_string())
+                .collect();
+
+            (betsize.clone(), filteres_lines)
+        })
         .collect()
 }
 

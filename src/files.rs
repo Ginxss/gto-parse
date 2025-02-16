@@ -151,7 +151,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_get_dir_entries_invalid() {
-        let _: Vec<_> = get_dir_entries("./test_datas").collect();
+        let _: Vec<_> = get_dir_entries(Path::new("./test_datas")).collect();
     }
 
     #[test]
