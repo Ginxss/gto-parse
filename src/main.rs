@@ -1,9 +1,9 @@
 /*
  * TODO:
  * - Color Code Table
- * - Data Add cleanup
- * - Paired Boards (as modifier?)
+ * - Paired Boards
  * - Duplicate checks
+ * - Show considered boards
  */
 
 mod args;
@@ -17,17 +17,13 @@ use std::{
     vec,
 };
 
+use args::{action::Action, betsize::Betsize, position::Positions};
 use board::{
-    connectedness::{
-        is_connectedness, is_disconnected, is_gutshot_possible, is_oesd_possible,
-        is_straight_possible, FlopConnectedness,
-    },
-    flop_height::{is_1bw, is_2bw, is_3bw, is_height, is_low, is_middling, FlopHeight},
-    suits::{is_monotone, is_rainbow, is_suit_type, is_twotone, FlopSuitType},
+    connectedness::{is_connectedness, FlopConnectedness},
+    flop_height::{is_height, FlopHeight},
+    suits::{is_suit_type, FlopSuitType},
 };
 use prettytable::{row, Table};
-
-use args::{Action, Betsize, Positions};
 
 #[derive(Debug)]
 struct DataRow {
@@ -105,7 +101,7 @@ fn main() {
         &args.connectednesses,
     );
 
-    let data_rows = build_data_rows(&file_contents);
+    let data_rows = build_data_rows(&filtered_lines);
 
     print_table(&data_rows);
 }
@@ -115,7 +111,7 @@ fn get_pos_dir(data_dir: &str, pos: &Positions) -> DirEntry {
         .into_iter()
         .find(|entry| {
             let name = files::get_path_name(&entry.path());
-            return name.contains(pos.ip.as_str()) && name.contains(pos.oop.as_str());
+            return name.contains(&pos.ip.to_string()) && name.contains(&pos.oop.to_string());
         })
         .expect("Could not find position directory")
 }
@@ -132,7 +128,7 @@ fn find_matching_betsize(dir: DirEntry, betsizes: &Vec<Betsize>) -> Option<(Bets
 
     betsizes
         .iter()
-        .find(|betsize| betsize.as_str() == filename.as_str())
+        .find(|betsize| betsize.to_string() == filename.as_str())
         .map(|betsize| (betsize.clone(), dir))
 }
 
@@ -162,7 +158,7 @@ fn file_matches_actions(file: &DirEntry, actions: &Vec<Action>) -> bool {
             .split(split_pattern)
             .skip(1)
             .zip(actions.iter())
-            .all(|(action_name, action)| action_name == action.as_str())
+            .all(|(action_name, action)| action_name == action.to_string())
 }
 
 fn get_file_contents(action_files: &Vec<(Betsize, DirEntry)>) -> Vec<(Betsize, String)> {
@@ -211,20 +207,20 @@ fn filter_file_contents(
         .collect()
 }
 
-fn build_data_rows(file_contents: &Vec<(Betsize, String)>) -> Vec<DataRow> {
-    file_contents
+fn build_data_rows(lines: &Vec<(Betsize, Vec<String>)>) -> Vec<DataRow> {
+    lines
         .iter()
-        .map(|(betsize, file_content)| {
-            let mut data_row = build_data_row(file_content);
+        .map(|(betsize, lines)| {
+            let mut data_row = build_data_row(lines);
             data_row.size = Some(betsize.clone());
             data_row
         })
         .collect()
 }
 
-fn build_data_row(file_content: &String) -> DataRow {
-    let data_rows: Vec<DataRow> = file_content
-        .lines()
+fn build_data_row(lines: &Vec<String>) -> DataRow {
+    let data_rows: Vec<DataRow> = lines
+        .iter()
         .skip(1)
         .map(|line| DataRow::new(line))
         .collect();
@@ -246,7 +242,11 @@ fn print_table(data_rows: &Vec<DataRow>) {
     data_rows
         .iter()
         .map(|data| {
-            let size = data.size.as_ref().map(|size| size.as_str()).unwrap_or("-");
+            let size = data
+                .size
+                .as_ref()
+                .map(|size| size.to_string())
+                .unwrap_or("-".to_string());
 
             row![size, data.eq, data.ev, data.bet_freq, data.check_freq]
         })
