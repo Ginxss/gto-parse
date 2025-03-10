@@ -17,7 +17,7 @@ use std::{
     vec,
 };
 
-use args::{action::Action, betsize::Betsize, position::Positions};
+use args::{action::Action, betsize::Betsize, position::Positions, Args};
 use board::{
     connectedness::{is_connectedness, FlopConnectedness},
     flop_height::{is_height, FlopHeight},
@@ -88,69 +88,85 @@ fn main() {
 
     let pos_dir = get_pos_dir("./data", &args.positions);
 
-    let size_dirs = get_size_dirs(&pos_dir, &args.betsizes);
+    let size_dirs = files::get_dirs(&pos_dir.path());
 
-    let action_files = get_action_files(&size_dirs, &args.actions);
-
-    let file_contents = get_file_contents(&action_files);
-
-    let filtered_lines = filter_file_contents(
-        &file_contents,
-        &args.heights,
-        &args.suits,
-        &args.connectednesses,
-    );
-
-    let data_rows = build_data_rows(&filtered_lines);
+    let data_rows = to_data_rows(&size_dirs, &args);
 
     print_table(&data_rows);
+}
+
+fn to_data_rows(size_dirs: &Vec<DirEntry>, args: &Args) -> Vec<DataRow> {
+    args.betsizes
+        .iter()
+        .map(|betsize| to_data_row(betsize, &size_dirs, &args))
+        .collect()
+}
+
+fn to_data_row(betsize: &Betsize, size_dirs: &Vec<DirEntry>, args: &Args) -> DataRow {
+    let size_dir = size_dirs
+        .iter()
+        .find(|dir| files::get_name(&dir.path()) == betsize.to_string())
+        .expect(&format!("Could not find size dir for {betsize}"));
+
+    let action_file = get_action_file_in_dir(size_dir, &args.actions);
+    let file_content = fs::read_to_string(action_file.path()).expect("Could not read file content");
+
+    let filteres_lines: Vec<String> = file_content
+        .lines()
+        .skip(1)
+        .filter(|line| {
+            line_matches_conditions(line, &args.heights, &args.suits, &args.connectednesses)
+        })
+        .map(|s| s.to_string())
+        .collect();
+
+    let mut data_row = build_data_row(&filteres_lines);
+    data_row.size = Some(betsize.clone());
+    data_row
+}
+
+fn line_matches_conditions(
+    line: &str,
+    heights: &Vec<FlopHeight>,
+    suits: &Vec<FlopSuitType>,
+    connectednesses: &Vec<FlopConnectedness>,
+) -> bool {
+    let board = line
+        .split('\t')
+        .next()
+        .expect("Error getting board from line");
+
+    let match_height = heights.is_empty() || heights.iter().any(|height| is_height(board, height));
+
+    let match_suits = suits.is_empty() || suits.iter().any(|suit| is_suit_type(board, suit));
+
+    let match_connectedness = connectednesses.is_empty()
+        || connectednesses
+            .iter()
+            .any(|connectedness| is_connectedness(board, connectedness));
+
+    match_height && match_suits && match_connectedness
 }
 
 fn get_pos_dir(data_dir: &str, pos: &Positions) -> DirEntry {
     files::get_dirs(Path::new(data_dir))
         .into_iter()
         .find(|entry| {
-            let name = files::get_path_name(&entry.path());
+            let name = files::get_name(&entry.path());
             return name.contains(&pos.ip.to_string()) && name.contains(&pos.oop.to_string());
         })
         .expect("Could not find position directory")
-}
-
-fn get_size_dirs(pos_dir: &DirEntry, betsizes: &Vec<Betsize>) -> Vec<(Betsize, DirEntry)> {
-    files::get_dirs(&pos_dir.path())
-        .into_iter()
-        .filter_map(|dir| find_matching_betsize(dir, betsizes))
-        .collect()
-}
-
-fn find_matching_betsize(dir: DirEntry, betsizes: &Vec<Betsize>) -> Option<(Betsize, DirEntry)> {
-    let filename = files::get_path_name(&dir.path());
-
-    betsizes
-        .iter()
-        .find(|betsize| betsize.to_string() == filename.as_str())
-        .map(|betsize| (betsize.clone(), dir))
-}
-
-fn get_action_files(
-    size_dirs: &Vec<(Betsize, DirEntry)>,
-    actions: &Vec<Action>,
-) -> Vec<(Betsize, DirEntry)> {
-    size_dirs
-        .iter()
-        .map(|(betsize, dir)| (betsize.clone(), get_action_file_in_dir(dir, actions)))
-        .collect()
 }
 
 fn get_action_file_in_dir(dir: &DirEntry, actions: &Vec<Action>) -> DirEntry {
     files::get_files(&dir.path())
         .into_iter()
         .find(|file| file_matches_actions(file, actions))
-        .unwrap()
+        .expect("Could not find action file")
 }
 
 fn file_matches_actions(file: &DirEntry, actions: &Vec<Action>) -> bool {
-    let filename = files::get_path_name(&file.path());
+    let filename = files::get_name(&file.path());
     let split_pattern = '_';
 
     filename.matches(split_pattern).count() == actions.len()
@@ -159,63 +175,6 @@ fn file_matches_actions(file: &DirEntry, actions: &Vec<Action>) -> bool {
             .skip(1)
             .zip(actions.iter())
             .all(|(action_name, action)| action_name == action.to_string())
-}
-
-fn get_file_contents(action_files: &Vec<(Betsize, DirEntry)>) -> Vec<(Betsize, String)> {
-    action_files
-        .iter()
-        .map(|(betsize, file)| (betsize.clone(), fs::read_to_string(file.path()).unwrap()))
-        .collect()
-}
-
-fn filter_file_contents(
-    file_contents: &Vec<(Betsize, String)>,
-    heights: &Vec<FlopHeight>,
-    suits: &Vec<FlopSuitType>,
-    connectednesses: &Vec<FlopConnectedness>,
-) -> Vec<(Betsize, Vec<String>)> {
-    file_contents
-        .iter()
-        .map(|(betsize, file_content)| {
-            let filteres_lines: Vec<String> = file_content
-                .lines()
-                .skip(1)
-                .filter(|line| {
-                    let board = line
-                        .split('\t')
-                        .next()
-                        .expect("Error getting board from line");
-
-                    let match_height =
-                        heights.is_empty() || heights.iter().any(|height| is_height(board, height));
-
-                    let match_suits =
-                        suits.is_empty() || suits.iter().any(|suit| is_suit_type(board, suit));
-
-                    let match_connectedness = connectednesses.is_empty()
-                        || connectednesses
-                            .iter()
-                            .any(|connectedness| is_connectedness(board, connectedness));
-
-                    match_height && match_suits && match_connectedness
-                })
-                .map(|s| s.to_string())
-                .collect();
-
-            (betsize.clone(), filteres_lines)
-        })
-        .collect()
-}
-
-fn build_data_rows(lines: &Vec<(Betsize, Vec<String>)>) -> Vec<DataRow> {
-    lines
-        .iter()
-        .map(|(betsize, lines)| {
-            let mut data_row = build_data_row(lines);
-            data_row.size = Some(betsize.clone());
-            data_row
-        })
-        .collect()
 }
 
 fn build_data_row(lines: &Vec<String>) -> DataRow {

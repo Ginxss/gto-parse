@@ -16,15 +16,15 @@ pub fn get_dirs(path: &Path) -> Vec<DirEntry> {
 }
 
 fn get_dir_entries(path: &Path) -> impl Iterator<Item = DirEntry> {
-    let path_name = get_path_name(path);
+    let name = get_name(path);
 
     fs::read_dir(path)
-        .expect(&format!("Error reading directory: {path_name}"))
+        .expect(&format!("Error reading directory: {name}"))
         .filter_map(Result::ok)
         .filter(|entry| !is_hidden(entry))
 }
 
-pub fn get_path_name(path: &Path) -> String {
+pub fn get_name(path: &Path) -> String {
     path.file_stem()
         .and_then(|x| x.to_str())
         .map(|x| x.to_string())
@@ -32,7 +32,7 @@ pub fn get_path_name(path: &Path) -> String {
 }
 
 fn is_hidden(entry: &DirEntry) -> bool {
-    get_path_name(&entry.path()).starts_with(".")
+    get_name(&entry.path()).starts_with(".")
 }
 
 #[cfg(test)]
@@ -68,7 +68,7 @@ mod tests {
 
         let mut dir_names: Vec<String> = get_dirs(test_dir)
             .iter()
-            .map(|dir| get_path_name(&dir.path()))
+            .map(|dir| get_name(&dir.path()))
             .collect();
 
         assert_eq!(dir_names.len(), 3);
@@ -136,7 +136,7 @@ mod tests {
         let test_dir = Path::new("./test_data");
 
         let mut entry_names: Vec<String> = get_dir_entries(test_dir)
-            .map(|dir| get_path_name(&dir.path()))
+            .map(|dir| get_name(&dir.path()))
             .collect();
 
         assert_eq!(entry_names.len(), 6);
@@ -162,7 +162,7 @@ mod tests {
             .unwrap()
             .filter_map(Result::ok)
             .filter(|entry| is_hidden(entry))
-            .map(|entry| get_path_name(&entry.path()))
+            .map(|entry| get_name(&entry.path()))
             .collect();
 
         let mut expected_hidden_entry_names = vec![".hidden_dir", ".hidden_file"];
@@ -173,13 +173,13 @@ mod tests {
     }
 
     #[test]
-    fn test_get_path_name() {
+    fn test_get_name() {
         let path = Path::new("./test_data");
-        let name = get_path_name(path);
+        let name = get_name(path);
         assert_eq!(name, String::from("test_data"));
 
         let path = Path::new("./test_data/file1.txt");
-        let name = get_path_name(path);
+        let name = get_name(path);
         assert_eq!(name, String::from("file1"));
     }
 }
