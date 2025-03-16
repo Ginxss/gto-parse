@@ -1,8 +1,7 @@
-mod util;
-
 pub mod connectedness;
 pub mod flop_height;
 pub mod suits;
+pub mod util;
 
 /*
  * Terminology:
