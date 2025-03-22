@@ -2,7 +2,12 @@ use prettytable::{format, row, Row, Table};
 
 use crate::calculation::datarow::DataRow;
 
-pub fn print_table(data_rows: Vec<DataRow>) {
+pub fn print_result(data_rows: Vec<DataRow>, boards: Vec<String>) {
+    println!("Considered boards: {:?}\n", boards);
+    print_table(data_rows);
+}
+
+fn print_table(data_rows: Vec<DataRow>) {
     let max_row = get_max_ev_row(&data_rows);
 
     let mut table = Table::new();

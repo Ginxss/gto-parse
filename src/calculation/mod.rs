@@ -1,3 +1,5 @@
+pub mod datarow;
+
 use std::{
     collections::HashSet,
     fs::{self, DirEntry},
@@ -15,15 +17,16 @@ use crate::{
     files,
 };
 
-pub mod datarow;
-
-pub fn build_data_rows(args: Args) -> Vec<DataRow> {
+pub fn build_data_rows_with_boards(args: Args) -> (Vec<DataRow>, Vec<String>) {
     let size_dirs = get_size_dirs(&args.positions);
 
-    args.betsizes
+    let (datarows, considered_boards) = args
+        .betsizes
         .iter()
-        .map(|betsize| to_data_row(betsize, &size_dirs, &args))
-        .collect()
+        .map(|betsize| build_data_row_with_boards(betsize, &size_dirs, &args))
+        .unzip();
+
+    (datarows, validate_identical_and_get(considered_boards))
 }
 
 fn get_size_dirs(positions: &Positions) -> Vec<DirEntry> {
@@ -41,7 +44,11 @@ fn get_pos_dir(data_dir: &str, pos: &Positions) -> DirEntry {
         .expect("Could not find position directory")
 }
 
-fn to_data_row(betsize: &Betsize, size_dirs: &Vec<DirEntry>, args: &Args) -> DataRow {
+fn build_data_row_with_boards(
+    betsize: &Betsize,
+    size_dirs: &Vec<DirEntry>,
+    args: &Args,
+) -> (DataRow, Vec<String>) {
     let size_dir = find_size_dir(betsize, size_dirs);
     let action_file = get_action_file_in_dir(size_dir, &args.actions);
     let file_content = fs::read_to_string(action_file.path()).expect("Could not read file content");
@@ -49,11 +56,11 @@ fn to_data_row(betsize: &Betsize, size_dirs: &Vec<DirEntry>, args: &Args) -> Dat
     let lines_with_boards = get_lines_with_boards(&file_content);
     validate_boards(&lines_with_boards);
 
-    let filteres_lines = filter_lines(&lines_with_boards, args);
+    let (filteres_lines, filtered_boards) = filter(&lines_with_boards, args);
 
     let mut data_row = build_data_row(&filteres_lines);
     data_row.size = Some(betsize.clone());
-    data_row
+    (data_row, filtered_boards)
 }
 
 fn find_size_dir<'a>(betsize: &Betsize, size_dirs: &'a Vec<DirEntry>) -> &'a DirEntry {
@@ -108,13 +115,13 @@ fn validate_boards(lines_with_boards: &Vec<(&str, &str)>) {
     }
 }
 
-fn filter_lines(lines_with_boards: &Vec<(&str, &str)>, args: &Args) -> Vec<String> {
+fn filter(lines_with_boards: &Vec<(&str, &str)>, args: &Args) -> (Vec<String>, Vec<String>) {
     lines_with_boards
         .iter()
         .filter_map(|(line, board)| {
-            board_matches_conditions(board, args).then_some(line.to_string())
+            board_matches_conditions(board, args).then_some((line.to_string(), board.to_string()))
         })
-        .collect()
+        .unzip()
 }
 
 fn board_matches_conditions(board: &str, args: &Args) -> bool {
@@ -147,4 +154,14 @@ fn build_data_row(lines: &Vec<String>) -> DataRow {
         .reduce(|row1, row2| row1 + row2)
         .map(|sum_row| sum_row / count)
         .expect("Could not calculate data row")
+}
+
+fn validate_identical_and_get(boards: Vec<Vec<String>>) -> Vec<String> {
+    boards
+        .into_iter()
+        .reduce(|acc, board| {
+            assert_eq!(acc, board);
+            acc
+        })
+        .expect("Could not reduce considered boards")
 }
