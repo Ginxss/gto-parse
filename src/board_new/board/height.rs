@@ -41,3 +41,98 @@ impl Board {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_is_1bw() {
+        assert!(Board::try_from("Ac9h6s").unwrap().is_1bw());
+        assert!(Board::try_from("Ac5h4s").unwrap().is_1bw());
+        assert!(Board::try_from("Jc6h6s").unwrap().is_1bw());
+        assert!(Board::try_from("Tc9h2s").unwrap().is_1bw());
+        assert!(!Board::try_from("9c8h6s").unwrap().is_1bw());
+        assert!(!Board::try_from("Kh4hQh").unwrap().is_1bw());
+        assert!(!Board::try_from("KcJhQs").unwrap().is_1bw());
+        assert!(!Board::try_from("3c2h6s").unwrap().is_1bw());
+        assert!(!Board::try_from("3c3h3s").unwrap().is_1bw());
+    }
+
+    #[test]
+    fn test_is_2bw() {
+        assert!(Board::try_from("Kc4hQs").unwrap().is_2bw());
+        assert!(Board::try_from("AcTh6s").unwrap().is_2bw());
+        assert!(Board::try_from("ThJh2d").unwrap().is_2bw());
+        assert!(Board::try_from("ThTd5c").unwrap().is_2bw());
+        assert!(!Board::try_from("Tc9h6s").unwrap().is_2bw());
+        assert!(!Board::try_from("9h2h6h").unwrap().is_2bw());
+        assert!(!Board::try_from("7h7c7d").unwrap().is_2bw());
+        assert!(!Board::try_from("3c2h6s").unwrap().is_2bw());
+        assert!(!Board::try_from("AhKdQd").unwrap().is_2bw());
+    }
+
+    #[test]
+    fn test_is_3bw() {
+        assert!(Board::try_from("KcJhQs").unwrap().is_3bw());
+        assert!(Board::try_from("AcKhTs").unwrap().is_3bw());
+        assert!(Board::try_from("JdKdTd").unwrap().is_3bw());
+        assert!(Board::try_from("KhKdTh").unwrap().is_3bw());
+        assert!(Board::try_from("QhQdQc").unwrap().is_3bw());
+        assert!(!Board::try_from("AcKh6s").unwrap().is_3bw());
+        assert!(!Board::try_from("Tc8s2s").unwrap().is_3bw());
+        assert!(!Board::try_from("Jh8h8d").unwrap().is_3bw());
+        assert!(!Board::try_from("3c2h5s").unwrap().is_3bw());
+        assert!(!Board::try_from("7h8h9h").unwrap().is_3bw());
+        assert!(!Board::try_from("2h2c2s").unwrap().is_3bw());
+    }
+
+    #[test]
+    fn test_is_middling() {
+        assert!(Board::try_from("9h3c2c").unwrap().is_middling());
+        assert!(Board::try_from("8h7c2s").unwrap().is_middling());
+        assert!(Board::try_from("9h8h7h").unwrap().is_middling());
+        assert!(Board::try_from("8h8d2h").unwrap().is_middling());
+        assert!(Board::try_from("7h7d7s").unwrap().is_middling());
+        assert!(!Board::try_from("9h3cAc").unwrap().is_middling());
+        assert!(!Board::try_from("6h3c2c").unwrap().is_middling());
+        assert!(!Board::try_from("2h3c3h").unwrap().is_middling());
+        assert!(!Board::try_from("TdThTs").unwrap().is_middling());
+        assert!(!Board::try_from("AcKh6s").unwrap().is_middling());
+        assert!(!Board::try_from("AcKhTs").unwrap().is_middling());
+    }
+
+    #[test]
+    fn test_is_low() {
+        assert!(Board::try_from("6h5h4h").unwrap().is_low());
+        assert!(Board::try_from("5c2h3s").unwrap().is_low());
+        assert!(Board::try_from("5c2h2s").unwrap().is_low());
+        assert!(Board::try_from("2h6d6h").unwrap().is_low());
+        assert!(Board::try_from("3h3c3s").unwrap().is_low());
+        assert!(!Board::try_from("Ac2h3s").unwrap().is_low());
+        assert!(!Board::try_from("Jh8s4s").unwrap().is_low());
+        assert!(!Board::try_from("Tc8sKs").unwrap().is_low());
+        assert!(!Board::try_from("7c8s6s").unwrap().is_low());
+        assert!(!Board::try_from("6h6d7c").unwrap().is_low());
+        assert!(!Board::try_from("JcJsJs").unwrap().is_low());
+    }
+
+    #[test]
+    fn test_is_height() {
+        assert!(Board::try_from("Qd8h2s")
+            .unwrap()
+            .is_height(&BoardHeight::SingleBW));
+        assert!(Board::try_from("QdJh2s")
+            .unwrap()
+            .is_height(&BoardHeight::DoubleBW));
+        assert!(Board::try_from("QdJhTs")
+            .unwrap()
+            .is_height(&BoardHeight::TripleBW));
+        assert!(Board::try_from("9d8h2s")
+            .unwrap()
+            .is_height(&BoardHeight::Middling));
+        assert!(Board::try_from("3d4h4s")
+            .unwrap()
+            .is_height(&BoardHeight::Low));
+    }
+}
