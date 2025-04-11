@@ -42,10 +42,12 @@ impl Board {
 
 #[cfg(test)]
 mod tests {
+    use crate::board_new::{rank::Rank, suit::Suit};
+
     use super::*;
 
     #[test]
-    fn test_board_from() {
+    fn test_board_try_from() {
         let board = Board::try_from("3cAh7d").unwrap();
 
         assert_eq!(
@@ -56,6 +58,19 @@ mod tests {
                 Card::try_from("Ah").unwrap(),
             ])
         );
+
+        let card1 = board.cards.iter().nth(0).unwrap();
+        let card2 = board.cards.iter().nth(1).unwrap();
+        let card3 = board.cards.iter().nth(2).unwrap();
+
+        assert_eq!(card1.rank, Rank::_3);
+        assert_eq!(card1.suit, Suit::Club);
+
+        assert_eq!(card2.rank, Rank::_7);
+        assert_eq!(card2.suit, Suit::Diamond);
+
+        assert_eq!(card3.rank, Rank::A);
+        assert_eq!(card3.suit, Suit::Heart);
     }
 
     #[test]
@@ -83,163 +98,169 @@ mod tests {
 
     #[test]
     #[should_panic]
-    fn test_board_from_invalid_board_1() {
+    fn test_invalid_board_try_from_1() {
         Board::try_from("ÄsKsTd").unwrap();
     }
 
     #[test]
     #[should_panic]
-    fn test_board_from_invalid_board_2() {
+    fn test_invalid_board_try_from_2() {
         Board::try_from("AsKsÜd").unwrap();
     }
 
     #[test]
     #[should_panic]
-    fn test_board_from_invalid_board_3() {
+    fn test_invalid_board_try_from_3() {
         Board::try_from(" AsKsTd").unwrap();
     }
 
     #[test]
     #[should_panic]
-    fn test_board_from_invalid_board_4() {
+    fn test_invalid_board_try_from_4() {
         Board::try_from("AsKsTd ").unwrap();
     }
 
     #[test]
     #[should_panic]
-    fn test_board_from_invalid_board_5() {
+    fn test_invalid_board_try_from_5() {
         Board::try_from("invalid").unwrap();
     }
 
     #[test]
     #[should_panic]
-    fn test_board_from_invalid_board_6() {
+    fn test_invalid_board_try_from_6() {
         Board::try_from("128a").unwrap();
     }
 
     #[test]
     #[should_panic]
-    fn test_board_from_invalid_board_7() {
+    fn test_invalid_board_try_from_7() {
         Board::try_from("129ab").unwrap();
     }
 
     #[test]
     #[should_panic]
-    fn test_board_from_invalid_board_8() {
+    fn test_invalid_board_try_from_8() {
         Board::try_from("130abc").unwrap();
     }
 
     #[test]
     #[should_panic]
-    fn test_board_from_invalid_board_9() {
+    fn test_invalid_board_try_from_9() {
         Board::try_from("abc131").unwrap();
     }
 
     #[test]
     #[should_panic]
-    fn test_board_from_invalid_board_10() {
+    fn test_invalid_board_try_from_10() {
         Board::try_from("14c2h2h").unwrap();
     }
 
     #[test]
     #[should_panic]
-    fn test_board_from_invalid_board_11() {
-        Board::try_from("15h5h5h").unwrap();
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_board_from_invalid_board_12() {
+    fn test_invalid_board_try_from_12() {
         Board::try_from("11c6h5s").unwrap();
     }
 
     #[test]
     #[should_panic]
-    fn test_board_from_invalid_board_13() {
-        Board::try_from("13c6h5s").unwrap();
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_board_from_invalid_board_14() {
+    fn test_invalid_board_try_from_14() {
         Board::try_from("229h5s").unwrap();
     }
 
     #[test]
     #[should_panic]
-    fn test_board_from_invalid_board_15() {
-        Board::try_from("19h6h6h").unwrap();
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_board_from_invalid_board_16() {
+    fn test_invalid_board_try_from_16() {
         Board::try_from("As Kh Td").unwrap();
     }
 
     #[test]
     #[should_panic]
-    fn test_board_from_invalid_board_17() {
+    fn test_invalid_board_try_from_17() {
         Board::try_from("10c6h5s").unwrap();
     }
 
     #[test]
     #[should_panic]
-    fn test_board_from_invalid_board_18() {
+    fn test_invalid_board_try_from_18() {
         Board::try_from("KsAc-4c6h").unwrap();
     }
 
     #[test]
     #[should_panic]
-    fn test_board_from_invalid_board_19() {
+    fn test_invalid_board_try_from_19() {
         Board::try_from("KsAc").unwrap();
     }
 
     #[test]
     #[should_panic]
-    fn test_board_from_invalid_board_20() {
+    fn test_invalid_board_try_from_20() {
         Board::try_from("KsAc66").unwrap();
     }
 
     #[test]
     #[should_panic]
-    fn test_board_from_invalid_board_21() {
+    fn test_invalid_board_try_from_21() {
         Board::try_from("SsAc-4c").unwrap();
     }
 
     #[test]
     #[should_panic]
-    fn test_board_from_invalid_board_22() {
-        Board::try_from("KsAc-4c6h6d").unwrap();
+    fn test_invalid_board_try_from_22() {
+        Board::try_from("KsAc-4c").unwrap();
     }
 
     #[test]
     #[should_panic]
-    fn test_board_from_invalid_board_23() {
+    fn test_invalid_board_try_from_23() {
         Board::try_from("KsAc-4h9").unwrap();
     }
 
     #[test]
     #[should_panic]
-    fn test_board_from_invalid_board_24() {
+    fn test_invalid_board_try_from_24() {
         Board::try_from("KsAc-4").unwrap();
     }
 
     #[test]
     #[should_panic]
-    fn test_board_from_invalid_board_25() {
-        Board::try_from("ksAc-4h").unwrap();
+    fn test_invalid_board_try_from_25() {
+        Board::try_from("ksAc4h").unwrap();
     }
 
     #[test]
     #[should_panic]
-    fn test_board_from_invalid_board_26() {
+    fn test_invalid_board_try_from_26() {
         Board::try_from("Kscc-4h").unwrap();
     }
 
     #[test]
     #[should_panic]
-    fn test_board_from_invalid_board_27() {
+    fn test_invalid_board_try_from_27() {
         Board::try_from("Ks").unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_invalid_board_try_from_28() {
+        Board::try_from("").unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_invalid_board_try_from_29() {
+        Board::try_from(".").unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_invalid_board_try_from_30() {
+        Board::try_from("------").unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_invalid_board_try_from_31() {
+        Board::try_from("KsAcAc").unwrap();
     }
 }

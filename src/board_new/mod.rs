@@ -4,7 +4,6 @@
  * Suit = suit modifier after rank (s, c, d or h)
  * Card = rank + suit (e.g. As)
  * Board = list of cards (e.g. flop = 3 cards)
- * Value = card rank as numerical value (A is 12, 2 is 0)
  */
 
 pub mod board;
@@ -37,3 +36,20 @@ impl Display for BoardParseError {
 }
 
 impl Error for BoardParseError {}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_board_parse_error_1() {
+        let err = BoardParseError::char("object", 'a');
+        assert_eq!(err.0, "error parsing object from a")
+    }
+
+    #[test]
+    fn test_board_parse_error_2() {
+        let err = BoardParseError::str("objects", "aaa");
+        assert_eq!(err.0, "error parsing objects from aaa")
+    }
+}
