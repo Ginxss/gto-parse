@@ -8,16 +8,14 @@ use action::Action;
 use betsize::Betsize;
 use position::{Position, Positions};
 
-use crate::board::{
-    connectedness::FlopConnectedness, flop_height::FlopHeight, suits::FlopSuitType,
-};
+use crate::poker::board::{connection::BoardConnection, height::BoardHeight, suit::BoardSuit};
 
 pub struct Args {
     pub positions: Positions,
     pub betsizes: Vec<Betsize>,
-    pub heights: Vec<FlopHeight>,
-    pub suits: Vec<FlopSuitType>,
-    pub connectednesses: Vec<FlopConnectedness>,
+    pub heights: Vec<BoardHeight>,
+    pub suits: Vec<BoardSuit>,
+    pub connectednesses: Vec<BoardConnection>,
     pub actions: Vec<Action>,
 }
 
@@ -34,9 +32,9 @@ pub fn read_cmdline_args() -> Args {
 
     let mut positions: Vec<Position> = Vec::new();
     let mut betsizes: Vec<Betsize> = Vec::new();
-    let mut heights: Vec<FlopHeight> = Vec::new();
-    let mut suits: Vec<FlopSuitType> = Vec::new();
-    let mut connectednesses: Vec<FlopConnectedness> = Vec::new();
+    let mut heights: Vec<BoardHeight> = Vec::new();
+    let mut suits: Vec<BoardSuit> = Vec::new();
+    let mut connections: Vec<BoardConnection> = Vec::new();
     let mut actions: Vec<Action> = Vec::new();
 
     let mut curr_parse_mode: ParseMode = ParseMode::None;
@@ -76,10 +74,10 @@ pub fn read_cmdline_args() -> Args {
                 ParseMode::Betsizes => {
                     betsizes.push(Betsize::from_str(token).expect("error parsing betsize"))
                 }
-                ParseMode::Heights => heights.push(FlopHeight::from_str(token)),
-                ParseMode::Suits => suits.push(FlopSuitType::from_str(token)),
+                ParseMode::Heights => heights.push(BoardHeight::try_from(token).unwrap()),
+                ParseMode::Suits => suits.push(BoardSuit::try_from(token).unwrap()),
                 ParseMode::Connectednesses => {
-                    connectednesses.push(FlopConnectedness::from_str(token))
+                    connections.push(BoardConnection::try_from(token).unwrap())
                 }
                 ParseMode::Actions => {
                     actions.push(Action::from_str(token).expect("error parsing action"))
@@ -104,7 +102,7 @@ pub fn read_cmdline_args() -> Args {
         betsizes,
         heights,
         suits,
-        connectednesses,
+        connectednesses: connections,
         actions,
     }
 }

@@ -1,9 +1,9 @@
 use prettytable::{format, row, Row, Table};
 
-use crate::calculation::datarow::DataRow;
+use crate::{calculation::datarow::DataRow, poker::board::Board};
 
-pub fn print_result(data_rows: Vec<DataRow>, boards: Vec<String>) {
-    println!("Considered boards: {:?}\n", boards);
+pub fn print_result(data_rows: Vec<DataRow>, boards: Vec<Board>) {
+    println!("Considered boards: {:#?}\n", boards);
     print_table(data_rows);
 }
 

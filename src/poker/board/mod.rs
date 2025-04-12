@@ -7,8 +7,8 @@ use std::collections::BTreeSet;
 
 use super::{card::Card, rank::RankHeight, BoardParseError};
 
-#[derive(Debug)]
-struct Board {
+#[derive(Debug, Hash, Eq, PartialEq)]
+pub struct Board {
     pub cards: BTreeSet<Card>,
 }
 
@@ -42,7 +42,7 @@ impl Board {
 
 #[cfg(test)]
 mod tests {
-    use crate::board_new::{rank::Rank, suit::Suit};
+    use crate::poker::{rank::Rank, suit::Suit};
 
     use super::*;
 

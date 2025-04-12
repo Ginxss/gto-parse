@@ -1,9 +1,8 @@
 mod args;
-mod board;
-mod board_new;
 mod calculation;
 mod files;
 mod output;
+mod poker;
 
 fn main() {
     let args = args::read_cmdline_args();

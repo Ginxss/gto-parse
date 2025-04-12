@@ -1,11 +1,26 @@
 use std::collections::HashSet;
 
+use crate::poker::BoardParseError;
+
 use super::Board;
 
 pub enum BoardSuit {
     Rainbow,
     Twotone,
     Montone,
+}
+
+impl TryFrom<&str> for BoardSuit {
+    type Error = BoardParseError;
+
+    fn try_from(s: &str) -> Result<BoardSuit, BoardParseError> {
+        match s {
+            "R" => Ok(BoardSuit::Rainbow),
+            "T" => Ok(BoardSuit::Twotone),
+            "M" => Ok(BoardSuit::Montone),
+            _ => Err(BoardParseError::str("suit", s)),
+        }
+    }
 }
 
 impl Board {
