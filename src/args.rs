@@ -1,14 +1,11 @@
-pub mod action;
-pub mod betsize;
-pub mod position;
-
 use std::{env, str::FromStr};
 
-use action::Action;
-use betsize::Betsize;
-use position::{Position, Positions};
-
-use crate::poker::board::{connection::BoardConnection, height::BoardHeight, suit::BoardSuit};
+use crate::poker::{
+    action::Action,
+    betsize::Betsize,
+    board::{connection::BoardConnection, height::BoardHeight, suit::BoardSuit},
+    position::{Position, Positions},
+};
 
 pub struct Args {
     pub positions: Positions,
@@ -68,20 +65,14 @@ pub fn read_cmdline_args() -> Args {
             }
 
             token => match curr_parse_mode {
-                ParseMode::Positions => {
-                    positions.push(Position::from_str(token).expect("error parsing position"))
-                }
-                ParseMode::Betsizes => {
-                    betsizes.push(Betsize::from_str(token).expect("error parsing betsize"))
-                }
+                ParseMode::Positions => positions.push(Position::from_str(token).unwrap()),
+                ParseMode::Betsizes => betsizes.push(Betsize::from_str(token).unwrap()),
                 ParseMode::Heights => heights.push(BoardHeight::try_from(token).unwrap()),
                 ParseMode::Suits => suits.push(BoardSuit::try_from(token).unwrap()),
                 ParseMode::Connectednesses => {
                     connections.push(BoardConnection::try_from(token).unwrap())
                 }
-                ParseMode::Actions => {
-                    actions.push(Action::from_str(token).expect("error parsing action"))
-                }
+                ParseMode::Actions => actions.push(Action::from_str(token).unwrap()),
                 _ => panic!(),
             },
         }

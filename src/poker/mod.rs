@@ -6,8 +6,11 @@
  * Board = list of cards (e.g. flop = 3 cards)
  */
 
+pub mod action;
+pub mod betsize;
 pub mod board;
 pub mod card;
+pub mod position;
 pub mod rank;
 pub mod suit;
 
@@ -17,25 +20,25 @@ use std::{
 };
 
 #[derive(Debug)]
-pub struct BoardParseError(String);
+pub struct ParseError(String);
 
-impl BoardParseError {
-    fn char(obj: &str, src: char) -> BoardParseError {
-        BoardParseError::str(obj, &src.to_string())
+impl ParseError {
+    fn char(obj: &str, src: char) -> ParseError {
+        ParseError::str(obj, &src.to_string())
     }
 
-    fn str(obj: &str, src: &str) -> BoardParseError {
-        BoardParseError(format!("error parsing {obj} from {src}"))
+    fn str(obj: &str, src: &str) -> ParseError {
+        ParseError(format!("error parsing {obj} from {src}"))
     }
 }
 
-impl Display for BoardParseError {
+impl Display for ParseError {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         write!(f, "{}", self.0)
     }
 }
 
-impl Error for BoardParseError {}
+impl Error for ParseError {}
 
 #[cfg(test)]
 mod tests {
@@ -43,13 +46,13 @@ mod tests {
 
     #[test]
     fn test_board_parse_error_1() {
-        let err = BoardParseError::char("object", 'a');
+        let err = ParseError::char("object", 'a');
         assert_eq!(err.0, "error parsing object from a")
     }
 
     #[test]
     fn test_board_parse_error_2() {
-        let err = BoardParseError::str("objects", "aaa");
+        let err = ParseError::str("objects", "aaa");
         assert_eq!(err.0, "error parsing objects from aaa")
     }
 }

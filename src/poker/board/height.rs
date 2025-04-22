@@ -1,5 +1,5 @@
 use super::Board;
-use crate::poker::{rank::RankHeight, BoardParseError};
+use crate::poker::{rank::RankHeight, ParseError};
 
 pub enum BoardHeight {
     TripleBW,
@@ -10,16 +10,16 @@ pub enum BoardHeight {
 }
 
 impl TryFrom<&str> for BoardHeight {
-    type Error = BoardParseError;
+    type Error = ParseError;
 
-    fn try_from(s: &str) -> Result<BoardHeight, BoardParseError> {
+    fn try_from(s: &str) -> Result<BoardHeight, ParseError> {
         match s {
             "1BW" => Ok(BoardHeight::SingleBW),
             "2BW" => Ok(BoardHeight::DoubleBW),
             "3BW" => Ok(BoardHeight::TripleBW),
             "MID" => Ok(BoardHeight::Middling),
             "LOW" => Ok(BoardHeight::Low),
-            _ => Err(BoardParseError::str("height", s)),
+            _ => Err(ParseError::str("height", s)),
         }
     }
 }

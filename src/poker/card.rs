@@ -1,9 +1,13 @@
-use std::{cmp::Ordering, ops::Sub};
+use std::{
+    cmp::Ordering,
+    fmt::{self, Display, Formatter},
+    ops::Sub,
+};
 
 use super::{
     rank::{Rank, RankHeight},
     suit::Suit,
-    BoardParseError,
+    ParseError,
 };
 
 #[derive(PartialEq, Eq, Hash, Debug)]
@@ -13,11 +17,11 @@ pub struct Card {
 }
 
 impl TryFrom<&str> for Card {
-    type Error = BoardParseError;
+    type Error = ParseError;
 
-    fn try_from(s: &str) -> Result<Card, BoardParseError> {
+    fn try_from(s: &str) -> Result<Card, ParseError> {
         if s.len() != 2 {
-            return Err(BoardParseError::str("card", s));
+            return Err(ParseError::str("card", s));
         }
 
         let mut chars = s.chars();
@@ -29,13 +33,19 @@ impl TryFrom<&str> for Card {
 }
 
 impl TryFrom<(char, char)> for Card {
-    type Error = BoardParseError;
+    type Error = ParseError;
 
-    fn try_from((rank, suit): (char, char)) -> Result<Card, BoardParseError> {
+    fn try_from((rank, suit): (char, char)) -> Result<Card, ParseError> {
         let rank = Rank::try_from(rank)?;
         let suit = Suit::try_from(suit)?;
 
         Ok(Card { rank, suit })
+    }
+}
+
+impl Display for Card {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}{}", self.rank, self.suit)
     }
 }
 

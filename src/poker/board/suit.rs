@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use crate::poker::BoardParseError;
+use crate::poker::ParseError;
 
 use super::Board;
 
@@ -11,14 +11,14 @@ pub enum BoardSuit {
 }
 
 impl TryFrom<&str> for BoardSuit {
-    type Error = BoardParseError;
+    type Error = ParseError;
 
-    fn try_from(s: &str) -> Result<BoardSuit, BoardParseError> {
+    fn try_from(s: &str) -> Result<BoardSuit, ParseError> {
         match s {
             "R" => Ok(BoardSuit::Rainbow),
             "T" => Ok(BoardSuit::Twotone),
             "M" => Ok(BoardSuit::Montone),
-            _ => Err(BoardParseError::str("suit", s)),
+            _ => Err(ParseError::str("suit", s)),
         }
     }
 }

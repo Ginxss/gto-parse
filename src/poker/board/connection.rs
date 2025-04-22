@@ -1,4 +1,4 @@
-use crate::poker::{card::Card, rank::RankHeight, BoardParseError};
+use crate::poker::{card::Card, rank::RankHeight, ParseError};
 
 use super::Board;
 
@@ -12,9 +12,9 @@ pub enum BoardConnection {
 }
 
 impl TryFrom<&str> for BoardConnection {
-    type Error = BoardParseError;
+    type Error = ParseError;
 
-    fn try_from(s: &str) -> Result<BoardConnection, BoardParseError> {
+    fn try_from(s: &str) -> Result<BoardConnection, ParseError> {
         match s {
             "DC" => Ok(BoardConnection::Disconnected),
             "GS" => Ok(BoardConnection::Gutshot),
@@ -22,7 +22,7 @@ impl TryFrom<&str> for BoardConnection {
             "WH" => Ok(BoardConnection::Wheel),
             "NS" => Ok(BoardConnection::NormalStraight),
             "AS" => Ok(BoardConnection::AnyStraight),
-            _ => Err(BoardParseError::str("connection", s)),
+            _ => Err(ParseError::str("connection", s)),
         }
     }
 }

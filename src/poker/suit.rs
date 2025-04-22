@@ -1,4 +1,6 @@
-use super::BoardParseError;
+use std::fmt::{self, Display, Formatter};
+
+use super::ParseError;
 
 #[derive(PartialEq, Eq, Hash, Debug)]
 pub enum Suit {
@@ -8,17 +10,35 @@ pub enum Suit {
     Heart,
 }
 
-impl TryFrom<char> for Suit {
-    type Error = BoardParseError;
+const SPADE_CHAR: char = 's';
+const CLUB_CHAR: char = 'c';
+const DIAMOND_CHAR: char = 'd';
+const HEART_CHAR: char = 'h';
 
-    fn try_from(c: char) -> Result<Suit, BoardParseError> {
+impl TryFrom<char> for Suit {
+    type Error = ParseError;
+
+    fn try_from(c: char) -> Result<Suit, ParseError> {
         match c {
-            's' => Ok(Suit::Spade),
-            'c' => Ok(Suit::Club),
-            'd' => Ok(Suit::Diamond),
-            'h' => Ok(Suit::Heart),
-            _ => Err(BoardParseError::char("suit", c)),
+            SPADE_CHAR => Ok(Suit::Spade),
+            CLUB_CHAR => Ok(Suit::Club),
+            DIAMOND_CHAR => Ok(Suit::Diamond),
+            HEART_CHAR => Ok(Suit::Heart),
+            _ => Err(ParseError::char("suit", c)),
         }
+    }
+}
+
+impl Display for Suit {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let c = match self {
+            Suit::Spade => SPADE_CHAR,
+            Suit::Club => CLUB_CHAR,
+            Suit::Diamond => DIAMOND_CHAR,
+            Suit::Heart => HEART_CHAR,
+        };
+
+        write!(f, "{}", c)
     }
 }
 

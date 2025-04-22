@@ -3,9 +3,12 @@ pub mod height;
 pub mod pair;
 pub mod suit;
 
-use std::collections::BTreeSet;
+use std::{
+    collections::BTreeSet,
+    fmt::{self, Display, Formatter},
+};
 
-use super::{card::Card, rank::RankHeight, BoardParseError};
+use super::{card::Card, rank::RankHeight, ParseError};
 
 #[derive(Debug, Hash, Eq, PartialEq)]
 pub struct Board {
@@ -13,12 +16,12 @@ pub struct Board {
 }
 
 impl TryFrom<&str> for Board {
-    type Error = BoardParseError;
+    type Error = ParseError;
 
-    fn try_from(board_str: &str) -> Result<Board, BoardParseError> {
+    fn try_from(board_str: &str) -> Result<Board, ParseError> {
         let expected_length = 6;
         if board_str.len() != 6 {
-            return Err(BoardParseError::str("flop", board_str));
+            return Err(ParseError::str("flop", board_str));
         }
 
         let cards = (0..expected_length)
@@ -37,6 +40,14 @@ impl Board {
             .iter()
             .filter(|card| card.is_height(height))
             .count()
+    }
+}
+
+impl Display for Board {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let s: String = self.cards.iter().map(|card| card.to_string()).collect();
+
+        write!(f, "{}", s)
     }
 }
 

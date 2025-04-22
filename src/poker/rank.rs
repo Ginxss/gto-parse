@@ -1,6 +1,9 @@
-use std::ops::Sub;
+use std::{
+    fmt::{self, Display, Formatter},
+    ops::Sub,
+};
 
-use super::BoardParseError;
+use super::ParseError;
 
 pub enum RankHeight {
     Broadway,
@@ -8,6 +11,20 @@ pub enum RankHeight {
     Low,
     Wheel,
 }
+
+const RANK_2_CHAR: char = '2';
+const RANK_3_CHAR: char = '3';
+const RANK_4_CHAR: char = '4';
+const RANK_5_CHAR: char = '5';
+const RANK_6_CHAR: char = '6';
+const RANK_7_CHAR: char = '7';
+const RANK_8_CHAR: char = '8';
+const RANK_9_CHAR: char = '9';
+const RANK_T_CHAR: char = 'T';
+const RANK_J_CHAR: char = 'J';
+const RANK_Q_CHAR: char = 'Q';
+const RANK_K_CHAR: char = 'K';
+const RANK_A_CHAR: char = 'A';
 
 #[derive(PartialEq, Eq, Hash, PartialOrd, Ord, Clone, Copy, Debug)]
 pub enum Rank {
@@ -27,25 +44,47 @@ pub enum Rank {
 }
 
 impl TryFrom<char> for Rank {
-    type Error = BoardParseError;
+    type Error = ParseError;
 
-    fn try_from(c: char) -> Result<Rank, BoardParseError> {
+    fn try_from(c: char) -> Result<Rank, ParseError> {
         match c {
-            '2' => Ok(Rank::_2),
-            '3' => Ok(Rank::_3),
-            '4' => Ok(Rank::_4),
-            '5' => Ok(Rank::_5),
-            '6' => Ok(Rank::_6),
-            '7' => Ok(Rank::_7),
-            '8' => Ok(Rank::_8),
-            '9' => Ok(Rank::_9),
-            'T' => Ok(Rank::T),
-            'J' => Ok(Rank::J),
-            'Q' => Ok(Rank::Q),
-            'K' => Ok(Rank::K),
-            'A' => Ok(Rank::A),
-            _ => Err(BoardParseError::char("rank", c)),
+            RANK_2_CHAR => Ok(Rank::_2),
+            RANK_3_CHAR => Ok(Rank::_3),
+            RANK_4_CHAR => Ok(Rank::_4),
+            RANK_5_CHAR => Ok(Rank::_5),
+            RANK_6_CHAR => Ok(Rank::_6),
+            RANK_7_CHAR => Ok(Rank::_7),
+            RANK_8_CHAR => Ok(Rank::_8),
+            RANK_9_CHAR => Ok(Rank::_9),
+            RANK_T_CHAR => Ok(Rank::T),
+            RANK_J_CHAR => Ok(Rank::J),
+            RANK_Q_CHAR => Ok(Rank::Q),
+            RANK_K_CHAR => Ok(Rank::K),
+            RANK_A_CHAR => Ok(Rank::A),
+            _ => Err(ParseError::char("rank", c)),
         }
+    }
+}
+
+impl Display for Rank {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let c = match self {
+            Rank::_2 => RANK_2_CHAR,
+            Rank::_3 => RANK_3_CHAR,
+            Rank::_4 => RANK_4_CHAR,
+            Rank::_5 => RANK_5_CHAR,
+            Rank::_6 => RANK_6_CHAR,
+            Rank::_7 => RANK_7_CHAR,
+            Rank::_8 => RANK_8_CHAR,
+            Rank::_9 => RANK_9_CHAR,
+            Rank::T => RANK_T_CHAR,
+            Rank::J => RANK_J_CHAR,
+            Rank::Q => RANK_Q_CHAR,
+            Rank::K => RANK_K_CHAR,
+            Rank::A => RANK_A_CHAR,
+        };
+
+        write!(f, "{}", c)
     }
 }
 

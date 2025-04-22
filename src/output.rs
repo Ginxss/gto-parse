@@ -3,8 +3,18 @@ use prettytable::{format, row, Row, Table};
 use crate::{calculation::datarow::DataRow, poker::board::Board};
 
 pub fn print_result(data_rows: Vec<DataRow>, boards: Vec<Board>) {
-    println!("Considered boards: {:#?}\n", boards);
+    print_considered_board(boards);
     print_table(data_rows);
+}
+
+fn print_considered_board(boards: Vec<Board>) {
+    let joined_boards = boards
+        .iter()
+        .map(|board| board.to_string())
+        .collect::<Vec<_>>()
+        .join(", ");
+
+    println!("Considered boards: {}", joined_boards);
 }
 
 fn print_table(data_rows: Vec<DataRow>) {

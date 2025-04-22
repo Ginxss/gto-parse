@@ -9,9 +9,9 @@ use std::{
 use datarow::DataRow;
 
 use crate::{
-    args::{action::Action, betsize::Betsize, position::Positions, Args},
+    args::Args,
     files,
-    poker::board::Board,
+    poker::{action::Action, betsize::Betsize, board::Board, position::Positions},
 };
 
 const DATA_DIR: &str = "./data";
@@ -83,7 +83,7 @@ fn file_matches_actions(file: &DirEntry, actions: &Vec<Action>) -> bool {
             .split(split_pattern)
             .skip(1)
             .zip(actions.iter())
-            .all(|(action_name, action)| action_name == action.to_string())
+            .all(|(action_name, action)| action_name == action.to_long_string())
 }
 
 fn get_lines_with_boards(file_content: &String) -> Vec<(&str, Board)> {

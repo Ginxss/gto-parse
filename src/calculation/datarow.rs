@@ -1,6 +1,6 @@
 use std::ops::{Add, Div};
 
-use crate::{args::betsize::Betsize, poker::board::Board};
+use crate::poker::{betsize::Betsize, board::Board};
 
 #[derive(Debug, PartialEq)]
 pub struct DataRow {
