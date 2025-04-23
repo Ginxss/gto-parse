@@ -260,9 +260,22 @@ mod tests {
     }
 
     #[test]
-    fn test_card_cmp_equal() {
+    fn test_card_cmp_equal_1() {
         let card1 = Card::try_from("3h").unwrap();
         let card2 = Card::try_from("3c").unwrap();
+
+        assert_eq!(card1.cmp(&card2), Ordering::Equal);
+        assert_eq!(card1.partial_cmp(&card2), Some(Ordering::Equal));
+
+        assert_eq!(card1 > card2, false);
+        assert_eq!(card1 == card2, false);
+        assert_eq!(card1 < card2, false);
+    }
+
+    #[test]
+    fn test_card_cmp_equal_2() {
+        let card1 = Card::try_from("3h").unwrap();
+        let card2 = Card::try_from("3h").unwrap();
 
         assert_eq!(card1.cmp(&card2), Ordering::Equal);
         assert_eq!(card1.partial_cmp(&card2), Some(Ordering::Equal));
@@ -292,8 +305,8 @@ mod tests {
     fn test_card_sub_3() {
         let card1 = Card::try_from("Th").unwrap();
         let card2 = Card::try_from("Ac").unwrap();
-        assert_eq!(&card1 - &card2, -5);
-        assert_eq!(card1 - card2, -5);
+        assert_eq!(&card1 - &card2, -4);
+        assert_eq!(card1 - card2, -4);
     }
 
     #[test]

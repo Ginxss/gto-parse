@@ -3,7 +3,7 @@ use std::{env, str::FromStr};
 use crate::poker::{
     action::Action,
     betsize::Betsize,
-    board::{connection::BoardConnection, height::BoardHeight, suit::BoardSuit},
+    board::{connection::Connection, height::BoardHeight, suit::BoardSuit},
     position::{Position, Positions},
 };
 
@@ -12,7 +12,7 @@ pub struct Args {
     pub betsizes: Vec<Betsize>,
     pub heights: Vec<BoardHeight>,
     pub suits: Vec<BoardSuit>,
-    pub connectednesses: Vec<BoardConnection>,
+    pub connectednesses: Vec<Connection>,
     pub actions: Vec<Action>,
 }
 
@@ -31,7 +31,7 @@ pub fn read_cmdline_args() -> Args {
     let mut betsizes: Vec<Betsize> = Vec::new();
     let mut heights: Vec<BoardHeight> = Vec::new();
     let mut suits: Vec<BoardSuit> = Vec::new();
-    let mut connections: Vec<BoardConnection> = Vec::new();
+    let mut connections: Vec<Connection> = Vec::new();
     let mut actions: Vec<Action> = Vec::new();
 
     let mut curr_parse_mode: ParseMode = ParseMode::None;
@@ -70,7 +70,7 @@ pub fn read_cmdline_args() -> Args {
                 ParseMode::Heights => heights.push(BoardHeight::try_from(token).unwrap()),
                 ParseMode::Suits => suits.push(BoardSuit::try_from(token).unwrap()),
                 ParseMode::Connectednesses => {
-                    connections.push(BoardConnection::try_from(token).unwrap())
+                    connections.push(Connection::try_from(token).unwrap())
                 }
                 ParseMode::Actions => actions.push(Action::from_str(token).unwrap()),
                 _ => panic!(),

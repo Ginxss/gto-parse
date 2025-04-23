@@ -70,7 +70,7 @@ mod tests {
 
     #[test]
     fn test_is_pair() {
-        assert!(Board::try_from("J́cJsJh")
+        assert!(Board::try_from("JcJsJh")
             .unwrap()
             .is_pair(&BoardPair::Trips));
         assert!(!Board::try_from("JcJsJh")

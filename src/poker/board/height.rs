@@ -129,7 +129,7 @@ mod tests {
         assert!(!Board::try_from("Tc8sKs").unwrap().is_low());
         assert!(!Board::try_from("7c8s6s").unwrap().is_low());
         assert!(!Board::try_from("6h6d7c").unwrap().is_low());
-        assert!(!Board::try_from("JcJsJs").unwrap().is_low());
+        assert!(!Board::try_from("JcJsJh").unwrap().is_low());
     }
 
     #[test]

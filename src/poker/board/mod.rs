@@ -19,16 +19,19 @@ impl TryFrom<&str> for Board {
     type Error = ParseError;
 
     fn try_from(board_str: &str) -> Result<Board, ParseError> {
-        let expected_length = 6;
-        if board_str.len() != 6 {
+        let expected_num_cards = 3;
+        let expected_length = expected_num_cards * 2;
+        if board_str.len() != expected_length {
             return Err(ParseError::str("flop", board_str));
         }
 
-        let cards = (0..expected_length)
+        let cards: BTreeSet<Card> = (0..expected_length)
             .step_by(2)
             .map(|i| &board_str[i..i + 2])
             .map(|card_str| Card::try_from(card_str))
             .collect::<Result<_, _>>()?;
+
+        assert_eq!(cards.len(), expected_num_cards);
 
         Ok(Board { cards })
     }

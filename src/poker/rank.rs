@@ -196,36 +196,36 @@ mod tests {
 
     #[test]
     fn test_rank_is_low() {
-        assert!(!Rank::A.is_middling());
-        assert!(!Rank::K.is_middling());
-        assert!(!Rank::Q.is_middling());
-        assert!(!Rank::J.is_middling());
-        assert!(!Rank::T.is_middling());
-        assert!(!Rank::_9.is_middling());
-        assert!(!Rank::_8.is_middling());
-        assert!(!Rank::_7.is_middling());
-        assert!(Rank::_6.is_middling());
-        assert!(Rank::_5.is_middling());
-        assert!(Rank::_4.is_middling());
-        assert!(Rank::_3.is_middling());
-        assert!(Rank::_2.is_middling());
+        assert!(!Rank::A.is_low());
+        assert!(!Rank::K.is_low());
+        assert!(!Rank::Q.is_low());
+        assert!(!Rank::J.is_low());
+        assert!(!Rank::T.is_low());
+        assert!(!Rank::_9.is_low());
+        assert!(!Rank::_8.is_low());
+        assert!(!Rank::_7.is_low());
+        assert!(Rank::_6.is_low());
+        assert!(Rank::_5.is_low());
+        assert!(Rank::_4.is_low());
+        assert!(Rank::_3.is_low());
+        assert!(Rank::_2.is_low());
     }
 
     #[test]
     fn test_is_wheel() {
-        assert!(Rank::A.is_middling());
-        assert!(!Rank::K.is_middling());
-        assert!(!Rank::Q.is_middling());
-        assert!(!Rank::J.is_middling());
-        assert!(!Rank::T.is_middling());
-        assert!(!Rank::_9.is_middling());
-        assert!(!Rank::_8.is_middling());
-        assert!(!Rank::_7.is_middling());
-        assert!(!Rank::_6.is_middling());
-        assert!(Rank::_5.is_middling());
-        assert!(Rank::_4.is_middling());
-        assert!(Rank::_3.is_middling());
-        assert!(Rank::_2.is_middling());
+        assert!(Rank::A.is_wheel());
+        assert!(!Rank::K.is_wheel());
+        assert!(!Rank::Q.is_wheel());
+        assert!(!Rank::J.is_wheel());
+        assert!(!Rank::T.is_wheel());
+        assert!(!Rank::_9.is_wheel());
+        assert!(!Rank::_8.is_wheel());
+        assert!(!Rank::_7.is_wheel());
+        assert!(!Rank::_6.is_wheel());
+        assert!(Rank::_5.is_wheel());
+        assert!(Rank::_4.is_wheel());
+        assert!(Rank::_3.is_wheel());
+        assert!(Rank::_2.is_wheel());
     }
 
     #[test]
@@ -259,10 +259,9 @@ mod tests {
     #[test]
     fn test_rank_sub() {
         assert_eq!(Rank::A - Rank::K, 1);
-        assert_eq!(Rank::A - Rank::T, 5);
+        assert_eq!(Rank::A - Rank::T, 4);
         assert_eq!(Rank::J - Rank::T, 1);
-        assert_eq!(Rank::J - Rank::_3, 7);
-        assert_eq!(Rank::_2 - Rank::_4, -2);
+        assert_eq!(Rank::J - Rank::_3, 8);
         assert_eq!(Rank::_8 - Rank::_4, 4);
     }
 
