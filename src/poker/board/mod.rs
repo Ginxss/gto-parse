@@ -48,7 +48,12 @@ impl Board {
 
 impl Display for Board {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let s: String = self.cards.iter().map(|card| card.to_string()).collect();
+        let s: String = self
+            .cards
+            .iter()
+            .rev()
+            .map(|card| card.to_string())
+            .collect();
 
         write!(f, "{}", s)
     }

@@ -1,4 +1,6 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, str::FromStr};
+
+use crate::poker::ParseError;
 
 use super::Board;
 
@@ -6,6 +8,19 @@ pub enum BoardPair {
     Unpaired,
     Paired,
     Trips,
+}
+
+impl FromStr for BoardPair {
+    type Err = ParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "U" => Ok(BoardPair::Unpaired),
+            "P" => Ok(BoardPair::Paired),
+            "T" => Ok(BoardPair::Trips),
+            _ => Err(ParseError::str("pair", s)),
+        }
+    }
 }
 
 impl Board {

@@ -3,7 +3,7 @@ use std::{env, str::FromStr};
 use crate::poker::{
     action::Action,
     betsize::Betsize,
-    board::{connection::Connection, height::BoardHeight, suit::BoardSuit},
+    board::{connection::Connection, height::BoardHeight, pair::BoardPair, suit::BoardSuit},
     position::{Position, Positions},
 };
 
@@ -12,7 +12,8 @@ pub struct Args {
     pub betsizes: Vec<Betsize>,
     pub heights: Vec<BoardHeight>,
     pub suits: Vec<BoardSuit>,
-    pub connectednesses: Vec<Connection>,
+    pub connections: Vec<Connection>,
+    pub pair: Vec<BoardPair>,
     pub actions: Vec<Action>,
 }
 
@@ -24,6 +25,7 @@ pub fn read_cmdline_args() -> Args {
         Heights,
         Suits,
         Connectednesses,
+        Pair,
         Actions,
     }
 
@@ -32,6 +34,7 @@ pub fn read_cmdline_args() -> Args {
     let mut heights: Vec<BoardHeight> = Vec::new();
     let mut suits: Vec<BoardSuit> = Vec::new();
     let mut connections: Vec<Connection> = Vec::new();
+    let mut pair: Vec<BoardPair> = Vec::new();
     let mut actions: Vec<Action> = Vec::new();
 
     let mut curr_parse_mode: ParseMode = ParseMode::None;
@@ -39,7 +42,7 @@ pub fn read_cmdline_args() -> Args {
     let args_uppercase = env::args().skip(1).map(|arg| arg.to_uppercase());
     for arg in args_uppercase {
         match &arg[..] {
-            "-P" => {
+            "-PO" => {
                 curr_parse_mode = ParseMode::Positions;
                 continue;
             }
@@ -59,6 +62,10 @@ pub fn read_cmdline_args() -> Args {
                 curr_parse_mode = ParseMode::Connectednesses;
                 continue;
             }
+            "-PA" => {
+                curr_parse_mode = ParseMode::Pair;
+                continue;
+            }
             "-A" => {
                 curr_parse_mode = ParseMode::Actions;
                 continue;
@@ -72,6 +79,7 @@ pub fn read_cmdline_args() -> Args {
                 ParseMode::Connectednesses => {
                     connections.push(Connection::try_from(token).unwrap())
                 }
+                ParseMode::Pair => pair.push(BoardPair::from_str(token).unwrap()),
                 ParseMode::Actions => actions.push(Action::from_str(token).unwrap()),
                 _ => panic!(),
             },
@@ -93,7 +101,8 @@ pub fn read_cmdline_args() -> Args {
         betsizes,
         heights,
         suits,
-        connectednesses: connections,
+        connections,
+        pair,
         actions,
     }
 }

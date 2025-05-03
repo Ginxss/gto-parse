@@ -122,14 +122,17 @@ fn filter<'a>(lines_with_boards: Vec<(&str, Board)>, args: &Args) -> (Vec<String
 }
 
 fn board_matches_conditions(board: &Board, args: &Args) -> bool {
-    let heights_match = args.heights.iter().all(|height| board.is_height(&height));
-    let suits_match = args.suits.iter().all(|suit| board.is_suit(&suit));
-    let connections_match = args
-        .connectednesses
-        .iter()
-        .all(|connection| board.is_connection(&connection));
+    let heights_match =
+        args.heights.is_empty() || args.heights.iter().any(|height| board.is_height(&height));
+    let suits_match = args.suits.is_empty() || args.suits.iter().any(|suit| board.is_suit(&suit));
+    let connections_match = args.connections.is_empty()
+        || args
+            .connections
+            .iter()
+            .any(|connection| board.is_connection(&connection));
+    let pair_match = args.pair.is_empty() || args.pair.iter().any(|pair| board.is_pair(&pair));
 
-    heights_match && suits_match && connections_match
+    heights_match && suits_match && connections_match && pair_match
 }
 
 fn build_data_row(lines: &Vec<String>) -> DataRow {
