@@ -2,6 +2,7 @@ use crate::poker::{card::Card, rank::RankHeight, ParseError};
 
 use super::Board;
 
+#[derive(PartialEq, Eq)]
 pub enum Connection {
     Disconnected,
     Gutshot,

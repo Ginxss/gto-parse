@@ -1,6 +1,7 @@
 use super::Board;
 use crate::poker::{rank::RankHeight, ParseError};
 
+#[derive(PartialEq, Eq)]
 pub enum BoardHeight {
     TripleBW,
     DoubleBW,

@@ -4,6 +4,7 @@ use crate::poker::ParseError;
 
 use super::Board;
 
+#[derive(PartialEq, Eq)]
 pub enum BoardSuit {
     Rainbow,
     Twotone,
