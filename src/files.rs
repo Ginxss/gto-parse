@@ -50,12 +50,8 @@ mod tests {
 
         assert_eq!(file_contents.len(), 3);
 
-        let path = |name: &str| test_dir.join(Path::new(name));
-        let mut expected_file_contents = vec![
-            fs::read_to_string(path("file1")).unwrap(),
-            fs::read_to_string(path("file2")).unwrap(),
-            fs::read_to_string(path("file3")).unwrap(),
-        ];
+        let mut expected_file_contents =
+            vec!["file1 content\n", "file2 content\n", "file3 content\n"];
 
         file_contents.sort();
         expected_file_contents.sort();
@@ -71,9 +67,9 @@ mod tests {
             .map(|dir| get_name(&dir.path()))
             .collect();
 
-        assert_eq!(dir_names.len(), 3);
+        assert_eq!(dir_names.len(), 4);
 
-        let mut expected_dir_names = vec!["dir1", "dir2", "dir3"];
+        let mut expected_dir_names = vec!["BTN vs BB", "CO vs BB", "HJ vs BB", "LJ vs BB"];
 
         dir_names.sort();
         expected_dir_names.sort();
@@ -82,53 +78,37 @@ mod tests {
 
     #[test]
     fn test_get_dirs_subfiles() {
-        let test_dir = Path::new("./test_data");
+        let test_dir = Path::new("./test_data/BTN vs BB");
 
-        let mut child_file_contents: Vec<Vec<String>> = get_dirs(test_dir)
+        let mut file_contents: Vec<String> = get_dirs(test_dir)
             .iter()
-            .map(|dir| get_files(&dir.path()))
-            .map(|files| {
-                let mut contents: Vec<String> = files
-                    .iter()
-                    .map(|file| fs::read_to_string(file.path()).unwrap())
-                    .collect();
-                contents.sort();
+            .map(|dir| {
+                let files = get_files(&dir.path());
+                assert_eq!(files.len(), 1);
+                let file = &files[0];
 
-                return contents;
+                let filename = get_name(&file.path());
+                assert_eq!(filename, "after_check");
+
+                fs::read_to_string(&file.path()).unwrap()
             })
             .collect();
 
-        assert_eq!(child_file_contents.len(), 3);
-        assert!(child_file_contents.iter().all(|c| c.len() == 3));
+        let expected_content = "Tree	Equity(*)	EV	Bet 82.5	Check
+8s8d8c	42.562	41.461	77.582	24.42	
+8s8d6d	61.060	13.549	32.860	78.143	
+Ks7d4c	33.603	34.212	24.302	61.695	
+As5s5d	77.418	34.440	6.024	88.995	
+As7d4c	49.40	55.912	20.64	99.341	
+Ts6s4d	70.407	10.865	3.348	77.653	
+";
+        let mut expected_contents: Vec<String> =
+            (0..4).map(|_| expected_content.to_string()).collect();
 
-        let path = |dir: &str, name: &str| test_dir.join(Path::new(dir)).join(Path::new(name));
+        expected_contents.sort();
+        file_contents.sort();
 
-        let mut contents1 = vec![
-            fs::read_to_string(path("dir1", "dir1_file1")).unwrap(),
-            fs::read_to_string(path("dir1", "dir1_file2")).unwrap(),
-            fs::read_to_string(path("dir1", "dir1_file3")).unwrap(),
-        ];
-        contents1.sort();
-
-        let mut contents2 = vec![
-            fs::read_to_string(path("dir2", "dir2_file1")).unwrap(),
-            fs::read_to_string(path("dir2", "dir2_file2")).unwrap(),
-            fs::read_to_string(path("dir2", "dir2_file3")).unwrap(),
-        ];
-        contents2.sort();
-
-        let mut contents3 = vec![
-            fs::read_to_string(path("dir3", "dir3_file1")).unwrap(),
-            fs::read_to_string(path("dir3", "dir3_file2")).unwrap(),
-            fs::read_to_string(path("dir3", "dir3_file3")).unwrap(),
-        ];
-        contents3.sort();
-
-        let mut expected_child_file_contents = vec![contents1, contents2, contents3];
-
-        child_file_contents.sort();
-        expected_child_file_contents.sort();
-        assert_eq!(child_file_contents, expected_child_file_contents);
+        assert_eq!(file_contents, expected_contents);
     }
 
     #[test]
@@ -139,9 +119,17 @@ mod tests {
             .map(|dir| get_name(&dir.path()))
             .collect();
 
-        assert_eq!(entry_names.len(), 6);
+        assert_eq!(entry_names.len(), 7);
 
-        let mut expected_entry_names = vec!["dir1", "dir2", "dir3", "file1", "file2", "file3"];
+        let mut expected_entry_names = vec![
+            "BTN vs BB",
+            "CO vs BB",
+            "HJ vs BB",
+            "LJ vs BB",
+            "file1",
+            "file2",
+            "file3",
+        ];
 
         entry_names.sort();
         expected_entry_names.sort();

@@ -4,6 +4,7 @@ mod files;
 mod output;
 mod poker;
 
+// TODO: real looking test data and then also add tests for the calculation -> and then it's done!
 fn main() {
     let args = args::read_cmdline_args();
 
