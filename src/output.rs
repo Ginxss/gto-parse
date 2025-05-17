@@ -67,3 +67,110 @@ fn build_table_row(row: &DataRow, max_row: &DataRow) -> Row {
         row![size_str, eq_str, ev_str, bet_str, check_str, Fr->ev_diff_str]
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::poker::betsize::Betsize;
+
+    use super::*;
+
+    #[test]
+    fn test_get_max_ev_row() {
+        let data_rows = vec![
+            DataRow {
+                size: Some(Betsize::Size33),
+                eq: 60.755173,
+                ev: 28.557,
+                bet_freq: 28.126001,
+                check_freq: 65.877335,
+            },
+            DataRow {
+                size: Some(Betsize::Size50),
+                eq: 52.90833,
+                ev: 41.9065,
+                bet_freq: 28.626001,
+                check_freq: 75.374504,
+            },
+            DataRow {
+                size: Some(Betsize::Size75),
+                eq: 61.075,
+                ev: 39.07317,
+                bet_freq: 21.626001,
+                check_freq: 69.04117,
+            },
+            DataRow {
+                size: Some(Betsize::Size150),
+                eq: 55.74167,
+                ev: 31.739836,
+                bet_freq: 27.459335,
+                check_freq: 71.70783,
+            },
+        ];
+
+        let max_row = get_max_ev_row(&data_rows);
+
+        assert_eq!(*max_row.size.as_ref().unwrap(), Betsize::Size50);
+    }
+
+    #[test]
+    fn test_build_table_row() {
+        let data_rows = vec![
+            DataRow {
+                size: Some(Betsize::Size33),
+                eq: 60.755173,
+                ev: 28.557,
+                bet_freq: 28.126001,
+                check_freq: 65.877335,
+            },
+            DataRow {
+                size: Some(Betsize::Size50),
+                eq: 52.90833,
+                ev: 41.9065,
+                bet_freq: 28.626001,
+                check_freq: 75.374504,
+            },
+            DataRow {
+                size: Some(Betsize::Size75),
+                eq: 61.075,
+                ev: 39.07317,
+                bet_freq: 21.626001,
+                check_freq: 69.04117,
+            },
+            DataRow {
+                size: Some(Betsize::Size150),
+                eq: 55.74167,
+                ev: 31.739836,
+                bet_freq: 27.459335,
+                check_freq: 71.70783,
+            },
+        ];
+
+        let max_row = DataRow {
+            size: Some(Betsize::Size50),
+            eq: 52.90833,
+            ev: 41.9065,
+            bet_freq: 28.626001,
+            check_freq: 75.374504,
+        };
+
+        let table_rows: Vec<_> = data_rows
+            .iter()
+            .map(|row| build_table_row(row, &max_row))
+            .collect();
+
+        let expected_table_row_33 =
+            row!["33", "60.76", "28.56", "28.13", "65.88", Fr->"-13.35 = -133.5 BB/100"];
+        let expected_table_row_50 =
+            row![b->"50", b->"52.91", b->"41.91", bFR->"28.63", bFG->"75.37", b->"0"];
+        let expected_table_row_75 =
+            row!["75", "61.08", "39.07", "21.63", "69.04", Fr->"-2.83 = -28.3 BB/100"];
+        let expected_table_row_150 =
+            row!["150", "55.74", "31.74", "27.46", "71.71", Fr->"-10.17 = -101.7 BB/100"];
+
+        assert_eq!(table_rows.len(), 4);
+        assert!(table_rows.contains(&expected_table_row_33));
+        assert!(table_rows.contains(&expected_table_row_50));
+        assert!(table_rows.contains(&expected_table_row_75));
+        assert!(table_rows.contains(&expected_table_row_150));
+    }
+}

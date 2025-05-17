@@ -84,13 +84,21 @@ fn parse_args(args: impl Iterator<Item = String>) -> Args {
     }
 
     assert!(positions.len() == 2);
-
     let pos1 = positions.get(0).unwrap().to_owned();
     let pos2 = positions.get(1).unwrap().to_owned();
     let positions = Positions {
         ip: pos1,
         oop: pos2,
     };
+
+    if betsizes.is_empty() {
+        betsizes = vec![
+            Betsize::Size33,
+            Betsize::Size50,
+            Betsize::Size75,
+            Betsize::Size150,
+        ];
+    }
 
     Args {
         positions,

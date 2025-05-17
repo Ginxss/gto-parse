@@ -138,6 +138,7 @@ fn board_matches_conditions(board: &Board, args: &Args) -> bool {
 fn build_data_row(lines: &Vec<String>) -> DataRow {
     let data_rows: Vec<DataRow> = lines.iter().map(|line| DataRow::new(line)).collect();
     let count = data_rows.len();
+    assert!(count > 0, "No lines found matching conditions");
 
     data_rows
         .into_iter()
