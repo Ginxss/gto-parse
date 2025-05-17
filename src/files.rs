@@ -94,6 +94,7 @@ mod tests {
             })
             .collect();
 
+        // TODO: Unterschiedliche Data & Header fuer unterschiedliche Sizes -> Und dann calculation tests!
         let expected_content = "Tree	Equity(*)	EV	Bet 82.5	Check
 8s8d8c	42.562	41.461	77.582	24.42	
 8s8d6d	61.060	13.549	32.860	78.143	
