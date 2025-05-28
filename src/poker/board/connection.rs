@@ -96,10 +96,6 @@ impl Board {
         }
     }
 
-    fn get_lowest_card(&self) -> &Card {
-        self.cards.first().unwrap()
-    }
-
     fn get_highest_card(&self) -> &Card {
         self.cards.last().unwrap()
     }

@@ -2,7 +2,7 @@ use std::fmt::{self, Display, Formatter};
 
 use super::ParseError;
 
-#[derive(PartialEq, Eq, Hash, Debug)]
+#[derive(PartialEq, Eq, Hash, Debug, PartialOrd, Ord)]
 pub enum Suit {
     Spade,
     Club,

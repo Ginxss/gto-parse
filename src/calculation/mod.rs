@@ -17,7 +17,7 @@ use crate::{
 const DATA_DIR: &str = "./data";
 
 pub fn build_data_rows_with_boards(args: Args) -> (Vec<DataRow>, Vec<Board>) {
-    let size_dirs = get_size_dirs(&args.positions);
+    let size_dirs = get_size_dirs(&args.positions, DATA_DIR);
 
     let (datarows, considered_boards) = args
         .betsizes
@@ -28,8 +28,8 @@ pub fn build_data_rows_with_boards(args: Args) -> (Vec<DataRow>, Vec<Board>) {
     (datarows, validate_identical_and_get(considered_boards))
 }
 
-fn get_size_dirs(positions: &Positions) -> Vec<DirEntry> {
-    let pos_dir = get_pos_dir(DATA_DIR, positions);
+fn get_size_dirs(positions: &Positions, data_dir: &str) -> Vec<DirEntry> {
+    let pos_dir = get_pos_dir(data_dir, positions);
     files::get_dirs(&pos_dir.path())
 }
 
@@ -90,6 +90,7 @@ fn get_lines_with_boards(file_content: &String) -> Vec<(&str, Board)> {
     let lines_with_boards = file_content
         .lines()
         .skip(1)
+        .filter(|line| !line.is_empty())
         .map(|line| (line, extract_board(line)))
         .collect();
 
@@ -104,7 +105,7 @@ fn extract_board(line: &str) -> Board {
         .next()
         .expect("Error getting board from line");
 
-    Board::try_from(board_str).expect(&format!("Invalid board: {}", board_str))
+    Board::try_from(board_str).unwrap()
 }
 
 fn validate_no_duplicates(lines_with_boards: &Vec<(&str, Board)>) {
@@ -155,4 +156,238 @@ fn validate_identical_and_get(boards: Vec<Vec<Board>>) -> Vec<Board> {
             acc
         })
         .expect("Could not reduce considered boards")
+}
+
+#[cfg(test)]
+mod tests {
+    use files::get_name;
+
+    use crate::poker::{
+        board::{height::BoardHeight, pair::BoardPair, suit::BoardSuit},
+        position::Position,
+    };
+
+    use super::*;
+
+    const DATA_DIR: &str = "./test_data";
+
+    #[test]
+    fn test_get_size_dirs_names() {
+        let positions = Positions {
+            ip: Position::BTN,
+            oop: Position::BB,
+        };
+
+        let mut size_dirs_names: Vec<_> = get_size_dirs(&positions, DATA_DIR)
+            .into_iter()
+            .map(|dir| get_name(&dir.path()))
+            .collect();
+
+        let mut expected_dir_names = vec![
+            "33".to_string(),
+            "50".to_string(),
+            "75".to_string(),
+            "150".to_string(),
+        ];
+
+        size_dirs_names.sort();
+        expected_dir_names.sort();
+
+        assert_eq!(size_dirs_names, expected_dir_names);
+    }
+
+    #[test]
+    fn test_build_data_rows_with_boards_1() {
+        let args = Args {
+            positions: Positions {
+                ip: Position::BTN,
+                oop: Position::BB,
+            },
+            pair: Vec::new(),
+            suits: Vec::new(),
+            heights: Vec::new(),
+            actions: vec![Action::Check],
+            betsizes: vec![
+                Betsize::Size33,
+                Betsize::Size50,
+                Betsize::Size75,
+                Betsize::Size150,
+            ],
+            connections: Vec::new(),
+        };
+
+        let size_dirs = get_size_dirs(&args.positions, DATA_DIR);
+
+        let (datarows, considered_boards): (Vec<DataRow>, Vec<Vec<Board>>) = args
+            .betsizes
+            .iter()
+            .map(|betsize| build_data_row_with_boards(betsize, &size_dirs, &args))
+            .unzip();
+
+        let (datarows, considered_boards) =
+            (datarows, validate_identical_and_get(considered_boards));
+
+        let expected_datarows = vec![
+            DataRow {
+                size: Some(Betsize::Size33),
+                eq: 60.755173,
+                ev: 28.557,
+                bet_freq: 28.126001,
+                check_freq: 65.877335,
+            },
+            DataRow {
+                size: Some(Betsize::Size50),
+                eq: 52.90833,
+                ev: 41.9065,
+                bet_freq: 28.626001,
+                check_freq: 75.374504,
+            },
+            DataRow {
+                size: Some(Betsize::Size75),
+                eq: 61.075,
+                ev: 39.07317,
+                bet_freq: 21.626001,
+                check_freq: 69.04117,
+            },
+            DataRow {
+                size: Some(Betsize::Size150),
+                eq: 55.74167,
+                ev: 31.739836,
+                bet_freq: 27.459335,
+                check_freq: 71.70783,
+            },
+        ];
+
+        assert_eq!(datarows.len(), expected_datarows.len());
+        assert!(expected_datarows.iter().all(|row| datarows.contains(row)));
+
+        let expected_boards = vec![
+            Board::try_from("8s8d8c").unwrap(),
+            Board::try_from("6d8s8d").unwrap(),
+            Board::try_from("4c7dKs").unwrap(),
+            Board::try_from("5s5dAs").unwrap(),
+            Board::try_from("4c7dAs").unwrap(),
+            Board::try_from("4d6sTs").unwrap(),
+        ];
+
+        assert_eq!(considered_boards.len(), expected_boards.len());
+        assert!(expected_boards
+            .iter()
+            .all(|board| considered_boards.contains(board)));
+    }
+
+    #[test]
+    fn test_build_data_rows_with_boards_2() {
+        let args = Args {
+            positions: Positions {
+                ip: Position::CO,
+                oop: Position::BB,
+            },
+            pair: vec![BoardPair::Unpaired],
+            suits: Vec::new(),
+            heights: vec![BoardHeight::SingleBW, BoardHeight::Middling],
+            actions: vec![Action::Check],
+            betsizes: vec![Betsize::Size33, Betsize::Size75],
+            connections: Vec::new(),
+        };
+
+        let size_dirs = get_size_dirs(&args.positions, DATA_DIR);
+
+        let (datarows, considered_boards): (Vec<DataRow>, Vec<Vec<Board>>) = args
+            .betsizes
+            .iter()
+            .map(|betsize| build_data_row_with_boards(betsize, &size_dirs, &args))
+            .unzip();
+
+        let (datarows, considered_boards) =
+            (datarows, validate_identical_and_get(considered_boards));
+
+        let expected_datarows = vec![
+            DataRow {
+                size: Some(Betsize::Size33),
+                eq: 56.47,
+                ev: 41.996334,
+                bet_freq: 18.763334,
+                check_freq: 58.896336,
+            },
+            DataRow {
+                size: Some(Betsize::Size75),
+                eq: 42.803333,
+                ev: 47.996338,
+                bet_freq: 20.43,
+                check_freq: 58.563004,
+            },
+        ];
+
+        assert_eq!(datarows.len(), expected_datarows.len());
+        assert!(expected_datarows.iter().all(|row| datarows.contains(row)));
+
+        let expected_boards = vec![
+            Board::try_from("Ks7d4c").unwrap(),
+            Board::try_from("As7d4c").unwrap(),
+            Board::try_from("Ts6s4d").unwrap(),
+        ];
+
+        assert_eq!(considered_boards.len(), expected_boards.len());
+        assert!(expected_boards
+            .iter()
+            .all(|board| considered_boards.contains(board)));
+    }
+
+    #[test]
+    fn test_build_data_rows_with_boards_3() {
+        let args = Args {
+            positions: Positions {
+                ip: Position::HJ,
+                oop: Position::BB,
+            },
+            pair: vec![BoardPair::Paired, BoardPair::Trips],
+            suits: vec![BoardSuit::Twotone],
+            heights: Vec::new(),
+            actions: vec![Action::Check],
+            betsizes: vec![Betsize::Size50, Betsize::Size150],
+            connections: Vec::new(),
+        };
+
+        let size_dirs = get_size_dirs(&args.positions, DATA_DIR);
+
+        let (datarows, considered_boards): (Vec<DataRow>, Vec<Vec<Board>>) = args
+            .betsizes
+            .iter()
+            .map(|betsize| build_data_row_with_boards(betsize, &size_dirs, &args))
+            .unzip();
+
+        let (datarows, considered_boards) =
+            (datarows, validate_identical_and_get(considered_boards));
+
+        let expected_datarows = vec![
+            DataRow {
+                size: Some(Betsize::Size50),
+                eq: 72.239,
+                ev: 27.4945,
+                bet_freq: 23.442001,
+                check_freq: 80.569,
+            },
+            DataRow {
+                size: Some(Betsize::Size150),
+                eq: 69.239,
+                ev: 23.9945,
+                bet_freq: 19.442001,
+                check_freq: 83.569,
+            },
+        ];
+
+        assert_eq!(datarows.len(), expected_datarows.len());
+        assert!(expected_datarows.iter().all(|row| datarows.contains(row)));
+
+        let expected_boards = vec![
+            Board::try_from("8d8s6d").unwrap(),
+            Board::try_from("As5d5s").unwrap(),
+        ];
+
+        assert_eq!(considered_boards.len(), expected_boards.len());
+        assert!(expected_boards
+            .iter()
+            .all(|board| considered_boards.contains(board)));
+    }
 }

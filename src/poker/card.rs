@@ -1,5 +1,4 @@
 use std::{
-    cmp::Ordering,
     fmt::{self, Display, Formatter},
     ops::Sub,
 };
@@ -10,7 +9,7 @@ use super::{
     ParseError,
 };
 
-#[derive(PartialEq, Eq, Hash, Debug)]
+#[derive(PartialEq, Eq, Hash, Debug, PartialOrd, Ord)]
 pub struct Card {
     pub rank: Rank,
     pub suit: Suit,
@@ -88,18 +87,6 @@ impl Card {
     }
 }
 
-impl PartialOrd for Card {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.rank.partial_cmp(&other.rank)
-    }
-}
-
-impl Ord for Card {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.rank.cmp(&other.rank)
-    }
-}
-
 impl Sub for Card {
     type Output = i32;
 
@@ -118,6 +105,8 @@ impl Sub for &Card {
 
 #[cfg(test)]
 mod tests {
+    use std::cmp::Ordering;
+
     use super::*;
 
     #[test]
@@ -264,10 +253,10 @@ mod tests {
         let card1 = Card::try_from("3h").unwrap();
         let card2 = Card::try_from("3c").unwrap();
 
-        assert_eq!(card1.cmp(&card2), Ordering::Equal);
-        assert_eq!(card1.partial_cmp(&card2), Some(Ordering::Equal));
+        assert_eq!(card1.cmp(&card2), Ordering::Greater);
+        assert_eq!(card1.partial_cmp(&card2), Some(Ordering::Greater));
 
-        assert_eq!(card1 > card2, false);
+        assert_eq!(card1 > card2, true);
         assert_eq!(card1 == card2, false);
         assert_eq!(card1 < card2, false);
     }
