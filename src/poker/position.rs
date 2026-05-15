@@ -17,7 +17,7 @@ pub enum Position {
     LJ,
     HJ,
     CO,
-    BTN,
+    Btn,
     SB,
     BB,
 }
@@ -30,7 +30,7 @@ impl FromStr for Position {
             LJ_STR => Ok(Position::LJ),
             HJ_STR => Ok(Position::HJ),
             CO_STR => Ok(Position::CO),
-            BTN_STR => Ok(Position::BTN),
+            BTN_STR => Ok(Position::Btn),
             SB_STR => Ok(Position::SB),
             BB_STR => Ok(Position::BB),
             _ => Err(ParseError::str("position", s)),
@@ -44,12 +44,12 @@ impl Display for Position {
             Position::LJ => LJ_STR,
             Position::HJ => HJ_STR,
             Position::CO => CO_STR,
-            Position::BTN => BTN_STR,
+            Position::Btn => BTN_STR,
             Position::SB => SB_STR,
             Position::BB => BB_STR,
         };
 
-        return write!(f, "{}", s);
+        write!(f, "{}", s)
     }
 }
 

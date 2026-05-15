@@ -212,7 +212,7 @@ mod tests {
 
     #[test]
     fn test_get_distances() {
-        let cards = vec![
+        let cards = [
             Card::try_from("Qc").unwrap(),
             Card::try_from("Th").unwrap(),
             Card::try_from("7c").unwrap(),
@@ -230,9 +230,9 @@ mod tests {
         assert_eq!(card1.cmp(&card2), Ordering::Greater);
         assert_eq!(card1.partial_cmp(&card2), Some(Ordering::Greater));
 
-        assert_eq!(card1 > card2, true);
-        assert_eq!(card1 == card2, false);
-        assert_eq!(card1 < card2, false);
+        assert!(card1 > card2);
+        assert!((card1 != card2));
+        assert!((card1 >= card2));
     }
 
     #[test]
@@ -243,9 +243,9 @@ mod tests {
         assert_eq!(card1.cmp(&card2), Ordering::Less);
         assert_eq!(card1.partial_cmp(&card2), Some(Ordering::Less));
 
-        assert_eq!(card1 > card2, false);
-        assert_eq!(card1 == card2, false);
-        assert_eq!(card1 < card2, true);
+        assert!((card1 <= card2));
+        assert!((card1 != card2));
+        assert!(card1 < card2);
     }
 
     #[test]
@@ -256,9 +256,9 @@ mod tests {
         assert_eq!(card1.cmp(&card2), Ordering::Greater);
         assert_eq!(card1.partial_cmp(&card2), Some(Ordering::Greater));
 
-        assert_eq!(card1 > card2, true);
-        assert_eq!(card1 == card2, false);
-        assert_eq!(card1 < card2, false);
+        assert!(card1 > card2);
+        assert!((card1 >= card2));
+        assert!((card1 != card2));
     }
 
     #[test]
@@ -269,9 +269,9 @@ mod tests {
         assert_eq!(card1.cmp(&card2), Ordering::Equal);
         assert_eq!(card1.partial_cmp(&card2), Some(Ordering::Equal));
 
-        assert_eq!(card1 > card2, false);
-        assert_eq!(card1 == card2, true);
-        assert_eq!(card1 < card2, false);
+        assert!((card1 <= card2));
+        assert!(card1 == card2);
+        assert!((card1 >= card2));
     }
 
     #[test]

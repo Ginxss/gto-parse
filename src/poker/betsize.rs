@@ -41,6 +41,6 @@ impl Display for Betsize {
             Betsize::Size150 => SIZE150_STR,
         };
 
-        return write!(f, "{}", s);
+        write!(f, "{}", s)
     }
 }

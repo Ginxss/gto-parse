@@ -34,13 +34,13 @@ fn print_table(data_rows: Vec<DataRow>) {
     table.printstd();
 }
 
-fn get_max_ev_row(data_rows: &Vec<DataRow>) -> &DataRow {
+fn get_max_ev_row(data_rows: &[DataRow]) -> &DataRow {
     data_rows
         .iter()
         .max_by(|row1, row2| {
             row1.ev
                 .partial_cmp(&row2.ev)
-                .expect(&format!("Could not compare {} and {}", row1.ev, row2.ev))
+                .unwrap_or_else(|| panic!("Could not compare {} and {}", row1.ev, row2.ev))
         })
         .expect("could not determine size of max row")
 }
@@ -114,7 +114,7 @@ mod tests {
 
     #[test]
     fn test_build_table_row() {
-        let data_rows = vec![
+        let data_rows = [
             DataRow {
                 size: Some(Betsize::Size33),
                 eq: 60.755173,

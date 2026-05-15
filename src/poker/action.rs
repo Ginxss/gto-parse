@@ -45,7 +45,7 @@ impl Display for Action {
             Action::Fold => FOLD_STR,
         };
 
-        return write!(f, "{}", s);
+        write!(f, "{}", s)
     }
 }
 

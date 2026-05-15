@@ -19,7 +19,7 @@ fn get_dir_entries(path: &Path) -> impl Iterator<Item = DirEntry> {
     let name = get_name(path);
 
     fs::read_dir(path)
-        .expect(&format!("Error reading directory: {name}"))
+        .unwrap_or_else(|_| panic!("Error reading directory: {name}"))
         .filter_map(Result::ok)
         .filter(|entry| !is_hidden(entry))
 }
@@ -92,10 +92,7 @@ mod tests {
                 let filename = get_name(&file.path());
                 assert_eq!(filename, "after_check");
 
-                (
-                    get_name(dir_path),
-                    fs::read_to_string(&file.path()).unwrap(),
-                )
+                (get_name(dir_path), fs::read_to_string(file.path()).unwrap())
             })
             .collect();
 
@@ -186,7 +183,7 @@ Ts6s4d	70.407	10.865	3.348	77.653
         let mut hidden_entry_names: Vec<String> = fs::read_dir(test_dir)
             .unwrap()
             .filter_map(Result::ok)
-            .filter(|entry| is_hidden(entry))
+            .filter(is_hidden)
             .map(|entry| get_name(&entry.path()))
             .collect();
 

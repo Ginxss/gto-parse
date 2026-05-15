@@ -90,31 +90,19 @@ impl Display for Rank {
 
 impl Rank {
     pub fn is_bw(&self) -> bool {
-        match self {
-            Rank::A | Rank::K | Rank::Q | Rank::J | Rank::T => true,
-            _ => false,
-        }
+        matches!(self, Rank::A | Rank::K | Rank::Q | Rank::J | Rank::T)
     }
 
     pub fn is_middling(&self) -> bool {
-        match self {
-            Rank::_9 | Rank::_8 | Rank::_7 => true,
-            _ => false,
-        }
+        matches!(self, Rank::_9 | Rank::_8 | Rank::_7)
     }
 
     pub fn is_low(&self) -> bool {
-        match self {
-            Rank::_6 | Rank::_5 | Rank::_4 | Rank::_3 | Rank::_2 => true,
-            _ => false,
-        }
+        matches!(self, Rank::_6 | Rank::_5 | Rank::_4 | Rank::_3 | Rank::_2)
     }
 
     pub fn is_wheel(&self) -> bool {
-        match self {
-            Rank::A | Rank::_2 | Rank::_3 | Rank::_4 | Rank::_5 => true,
-            _ => false,
-        }
+        matches!(self, Rank::A | Rank::_2 | Rank::_3 | Rank::_4 | Rank::_5)
     }
 
     pub fn is_height(&self, height: &RankHeight) -> bool {

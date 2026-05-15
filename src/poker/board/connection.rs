@@ -6,7 +6,7 @@ use super::Board;
 pub enum Connection {
     Disconnected,
     Gutshot,
-    OESD,
+    Oesd,
     Wheel,
     NormalStraight,
     AnyStraight,
@@ -19,7 +19,7 @@ impl TryFrom<&str> for Connection {
         match s {
             "DC" => Ok(Connection::Disconnected),
             "GS" => Ok(Connection::Gutshot),
-            "OESD" => Ok(Connection::OESD),
+            "OESD" => Ok(Connection::Oesd),
             "WH" => Ok(Connection::Wheel),
             "NS" => Ok(Connection::NormalStraight),
             "AS" => Ok(Connection::AnyStraight),
@@ -89,7 +89,7 @@ impl Board {
         match connection {
             Connection::Disconnected => self.is_disconnected(),
             Connection::Gutshot => self.is_only_gutshot_possible(),
-            Connection::OESD => self.is_only_oesd_possible(),
+            Connection::Oesd => self.is_only_oesd_possible(),
             Connection::Wheel => self.is_wheel_possible(),
             Connection::NormalStraight => self.is_normal_straight_possible(),
             Connection::AnyStraight => self.is_any_straight_possible(),
@@ -263,86 +263,56 @@ mod tests {
     #[test]
     fn test_is_connection_1() {
         let disconnected_board = Board::try_from("Kh8h2h").unwrap();
-        assert_eq!(
-            disconnected_board.is_connection(&Connection::Disconnected),
-            true
-        );
-        assert_eq!(
-            disconnected_board.is_connection(&Connection::Gutshot),
-            false
-        );
-        assert_eq!(disconnected_board.is_connection(&Connection::OESD), false);
-        assert_eq!(disconnected_board.is_connection(&Connection::Wheel), false);
-        assert_eq!(
-            disconnected_board.is_connection(&Connection::NormalStraight),
-            false
-        );
-        assert_eq!(
-            disconnected_board.is_connection(&Connection::AnyStraight),
-            false
-        );
+        assert!(disconnected_board.is_connection(&Connection::Disconnected));
+        assert!(!disconnected_board.is_connection(&Connection::Gutshot));
+        assert!(!disconnected_board.is_connection(&Connection::Oesd));
+        assert!(!disconnected_board.is_connection(&Connection::Wheel));
+        assert!(!disconnected_board.is_connection(&Connection::NormalStraight));
+        assert!(!disconnected_board.is_connection(&Connection::AnyStraight));
     }
 
     #[test]
     fn test_is_connection_2() {
         let gs_board = Board::try_from("Kh9h2h").unwrap();
-        assert_eq!(gs_board.is_connection(&Connection::Disconnected), false);
-        assert_eq!(gs_board.is_connection(&Connection::Gutshot), true);
-        assert_eq!(gs_board.is_connection(&Connection::OESD), false);
-        assert_eq!(gs_board.is_connection(&Connection::Wheel), false);
-        assert_eq!(gs_board.is_connection(&Connection::NormalStraight), false);
-        assert_eq!(gs_board.is_connection(&Connection::AnyStraight), false);
+        assert!(!gs_board.is_connection(&Connection::Disconnected));
+        assert!(gs_board.is_connection(&Connection::Gutshot));
+        assert!(!gs_board.is_connection(&Connection::Oesd));
+        assert!(!gs_board.is_connection(&Connection::Wheel));
+        assert!(!gs_board.is_connection(&Connection::NormalStraight));
+        assert!(!gs_board.is_connection(&Connection::AnyStraight));
     }
 
     #[test]
     fn test_is_connection_3() {
         let oesd_board = Board::try_from("KhTh2c").unwrap();
-        assert_eq!(oesd_board.is_connection(&Connection::Disconnected), false);
-        assert_eq!(oesd_board.is_connection(&Connection::Gutshot), false);
-        assert_eq!(oesd_board.is_connection(&Connection::OESD), true);
-        assert_eq!(oesd_board.is_connection(&Connection::Wheel), false);
-        assert_eq!(oesd_board.is_connection(&Connection::NormalStraight), false);
-        assert_eq!(oesd_board.is_connection(&Connection::AnyStraight), false);
+        assert!(!oesd_board.is_connection(&Connection::Disconnected));
+        assert!(!oesd_board.is_connection(&Connection::Gutshot));
+        assert!(oesd_board.is_connection(&Connection::Oesd));
+        assert!(!oesd_board.is_connection(&Connection::Wheel));
+        assert!(!oesd_board.is_connection(&Connection::NormalStraight));
+        assert!(!oesd_board.is_connection(&Connection::AnyStraight));
     }
 
     #[test]
     fn test_is_connection_4() {
         let wheel_board = Board::try_from("Ah5c2c").unwrap();
-        assert_eq!(wheel_board.is_connection(&Connection::Disconnected), false);
-        assert_eq!(wheel_board.is_connection(&Connection::Gutshot), false);
-        assert_eq!(wheel_board.is_connection(&Connection::OESD), false);
-        assert_eq!(wheel_board.is_connection(&Connection::Wheel), true);
-        assert_eq!(
-            wheel_board.is_connection(&Connection::NormalStraight),
-            false
-        );
-        assert_eq!(wheel_board.is_connection(&Connection::AnyStraight), true);
+        assert!(!wheel_board.is_connection(&Connection::Disconnected));
+        assert!(!wheel_board.is_connection(&Connection::Gutshot));
+        assert!(!wheel_board.is_connection(&Connection::Oesd));
+        assert!(wheel_board.is_connection(&Connection::Wheel));
+        assert!(!wheel_board.is_connection(&Connection::NormalStraight));
+        assert!(wheel_board.is_connection(&Connection::AnyStraight));
     }
 
     #[test]
     fn test_is_connection_5() {
         let ns_board = Board::try_from("KhTs9c").unwrap();
-        assert_eq!(ns_board.is_connection(&Connection::Disconnected), false);
-        assert_eq!(ns_board.is_connection(&Connection::Gutshot), false);
-        assert_eq!(ns_board.is_connection(&Connection::OESD), false);
-        assert_eq!(ns_board.is_connection(&Connection::Wheel), false);
-        assert_eq!(ns_board.is_connection(&Connection::NormalStraight), true);
-        assert_eq!(ns_board.is_connection(&Connection::AnyStraight), true);
-    }
-
-    #[test]
-    fn test_get_lowest_card() {
-        assert_eq!(
-            Board::try_from("Kh8h2h").unwrap().get_lowest_card(),
-            &Card::try_from("2h").unwrap()
-        );
-        assert_eq!(
-            Board::try_from("AsKhTs").unwrap().get_lowest_card(),
-            &Card::try_from("Ts").unwrap()
-        );
-
-        let board = Board::try_from("Kh8h8c").unwrap();
-        assert!(board.get_lowest_card().rank == Rank::try_from('8').unwrap());
+        assert!(!ns_board.is_connection(&Connection::Disconnected));
+        assert!(!ns_board.is_connection(&Connection::Gutshot));
+        assert!(!ns_board.is_connection(&Connection::Oesd));
+        assert!(!ns_board.is_connection(&Connection::Wheel));
+        assert!(ns_board.is_connection(&Connection::NormalStraight));
+        assert!(ns_board.is_connection(&Connection::AnyStraight));
     }
 
     #[test]

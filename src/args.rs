@@ -84,7 +84,7 @@ fn parse_args(args: impl Iterator<Item = String>) -> Args {
     }
 
     assert!(positions.len() == 2);
-    let pos1 = positions.get(0).unwrap().to_owned();
+    let pos1 = positions.first().unwrap().to_owned();
     let pos2 = positions.get(1).unwrap().to_owned();
     let positions = Positions {
         ip: pos1,
@@ -127,7 +127,7 @@ mod tests {
 
         let args = parse_args(args_vec);
 
-        assert_eq!(args.positions.ip, Position::BTN);
+        assert_eq!(args.positions.ip, Position::Btn);
         assert_eq!(args.positions.oop, Position::BB);
 
         assert_eq!(args.betsizes.len(), 3);
@@ -145,7 +145,7 @@ mod tests {
         assert_eq!(args.connections.len(), 4);
         assert!(args.connections.contains(&Connection::Disconnected));
         assert!(args.connections.contains(&Connection::Gutshot));
-        assert!(args.connections.contains(&Connection::OESD));
+        assert!(args.connections.contains(&Connection::Oesd));
         assert!(args.connections.contains(&Connection::Wheel));
 
         assert_eq!(args.pair.len(), 1);

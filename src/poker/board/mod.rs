@@ -28,7 +28,7 @@ impl TryFrom<&str> for Board {
         let cards: BTreeSet<Card> = (0..expected_length)
             .step_by(2)
             .map(|i| &board_str[i..i + 2])
-            .map(|card_str| Card::try_from(card_str))
+            .map(Card::try_from)
             .collect::<Result<_, _>>()?;
 
         assert_eq!(cards.len(), expected_num_cards);
@@ -78,9 +78,10 @@ mod tests {
             ])
         );
 
-        let card1 = board.cards.iter().nth(0).unwrap();
-        let card2 = board.cards.iter().nth(1).unwrap();
-        let card3 = board.cards.iter().nth(2).unwrap();
+        let mut iter = board.cards.iter();
+        let card1 = iter.next().unwrap();
+        let card2 = iter.next().unwrap();
+        let card3 = iter.next().unwrap();
 
         assert_eq!(card1.rank, Rank::_3);
         assert_eq!(card1.suit, Suit::Club);
